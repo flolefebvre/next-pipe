@@ -1,0 +1,65 @@
+{
+  "name": "@flefebvre/next-pipe",
+  "version": "0.0.1",
+  "description": "A pipe system for Next.js that reduces boilerplate in pages, server actions, and route handlers.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Florian Lefebvre <florian.lefebvre.contact@gmail.com>",
+  "homepage": "https://github.com/flolefebvre/next-pipe#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flolefebvre/next-pipe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flolefebvre/next-pipe/issues"
+  },
+  "keywords": [
+    "next",
+    "nextjs",
+    "pipe",
+    "pipeline",
+    "middleware",
+    "server-actions",
+    "route-handlers",
+    "app-router",
+    "boilerplate"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
+  },
+  "peerDependencies": {
+    "next": ">=16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0",
+    "next": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.6.0",
+      "onFail": "download"
+    }
+  }
+}
