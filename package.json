@@ -1,7 +1,7 @@
 {
   "name": "@flefebvre/next-pipe",
   "version": "0.0.1",
-  "description": "A pipe system for Next.js that reduces boilerplate in pages, server actions, and route handlers.",
+  "description": "A typed, onion-model middleware system for Next.js route handlers, server actions, form actions, and pages.",
   "type": "module",
   "license": "MIT",
   "author": "Florian Lefebvre <florian.lefebvre.contact@gmail.com>",
@@ -26,28 +26,81 @@
   ],
   "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+    "./server": {
+      "types": "./dist/server-index.d.ts",
+      "default": "./dist/server-index.js"
+    },
+    "./client": {
+      "types": "./dist/client-index.d.ts",
+      "default": "./dist/client-index.js"
+    },
+    "./pipes": {
+      "types": "./dist/pipes/index.d.ts",
+      "default": "./dist/pipes/index.js"
+    },
+    "./middlewares": {
+      "types": "./dist/middlewares/index.d.ts",
+      "default": "./dist/middlewares/index.js"
+    },
+    "./middlewares/routes": {
+      "types": "./dist/middlewares/routes/index.d.ts",
+      "default": "./dist/middlewares/routes/index.js"
+    },
+    "./middlewares/actions": {
+      "types": "./dist/middlewares/actions/index.d.ts",
+      "default": "./dist/middlewares/actions/index.js"
+    },
+    "./middlewares/form-actions": {
+      "types": "./dist/middlewares/form-actions/index.d.ts",
+      "default": "./dist/middlewares/form-actions/index.js"
+    },
+    "./middlewares/pages": {
+      "types": "./dist/middlewares/pages/index.d.ts",
+      "default": "./dist/middlewares/pages/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
+  "bin": {
+    "next-pipe": "./dist/codegen/generate.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json && echo 'BUILD OK'",
+    "typecheck": "tsc --noEmit && echo 'TYPECHECK OK'",
     "clean": "rm -rf dist",
-    "prepublishOnly": "pnpm run clean && pnpm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "format": "pnpm exec prettier -w src && echo 'FORMAT OK'",
+    "test": "vitest --run && echo 'TEST OK'",
+    "lint": "eslint --max-warnings 0 && echo 'LINT OK'",
+    "fallow":"fallow --only dead-code,dupes && echo 'FALLOW OK'",
+    "gate": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm fallow"
   },
   "peerDependencies": {
-    "next": ">=16.0.0"
+    "next": ">=16.0.0",
+    "react": ">=19.0.0",
+    "typescript": ">=5.0.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^10.6.0",
+    "fallow": "^2.103.0",
+    "next": "^16.0.0",
+    "prettier": "^3.9.0",
+    "react": "^19.2.7",
     "typescript": "^6.0.0",
-    "next": "^16.0.0"
+    "typescript-eslint": "^8.62.0",
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -61,5 +114,8 @@
       "version": "^11.6.0",
       "onFail": "download"
     }
+  },
+  "dependencies": {
+    "type-fest": "^5.7.0"
   }
 }
