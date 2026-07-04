@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "src",
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
@@ -16,6 +16,9 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "tests"],
+  // Route fixtures are loaded by analyze-routes.test.ts via its own program.
+  // They trip declaration-emit naming checks (TS4023) that real Next.js
+  // consumers never hit, since app code is not emitted to .d.ts.
+  "exclude": ["dist", "node_modules", "tests/fixtures"]
 }
