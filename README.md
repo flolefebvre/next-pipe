@@ -145,6 +145,16 @@ if (res.status === 200) {
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.
 
+## Agent skill
+
+If you use an AI coding agent (Claude Code, Cursor, Codex, …), this repo ships an installable [skill](skills/next-pipe/SKILL.md) that teaches the agent next-pipe's pipes, middlewares, codegen, and client:
+
+```sh
+npx skills add flolefebvre/next-pipe
+```
+
+(Uses the [skills CLI](https://github.com/vercel-labs/skills); or just copy `skills/next-pipe/` into your agent's skills directory, e.g. `.claude/skills/`.)
+
 ## License
 
 [MIT](./LICENSE)

@@ -1,3 +1,7 @@
+# Agent skill sync
+
+When changing the public API or `docs/`, update `skills/next-pipe/` (and the version stamp in its `SKILL.md`) in the same PR.
+
 # Commands
 
 For formatting, run `pnpm run format`.
