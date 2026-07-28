@@ -65,12 +65,11 @@ function relativeTo(file) {
 const isFixture = (file) => relativeTo(file).startsWith("tests/");
 const isOurs = (file) => {
   const relative = relativeTo(file);
-  // Deliberately a pure allowlist, with no `node_modules` exclusion: the
-  // fixture reaches `dist` *through* a symlink under its own `node_modules`,
-  // so excluding that path would reclassify every real failure as third-party
-  // noise the day tsc stops realpathing the symlink. Hence the unrealpathed
-  // form is matched too — scoped to this package, since plenty of third-party
-  // packages ship a `dist/` of their own.
+  // No `node_modules` exclusion, deliberately: the fixture reaches `dist`
+  // *through* a symlink under its own `node_modules`, so excluding that path
+  // would silently reclassify every real failure as third-party noise the day
+  // tsc stops realpathing it. Hence the unrealpathed form is matched too,
+  // scoped to this package — plenty of others ship a `dist/`.
   return relative.startsWith("dist/") || relative.includes(`${pkg.name}/dist/`) || isFixture(file);
 };
 
@@ -130,9 +129,8 @@ const tsc = require.resolve("typescript/bin/tsc");
 let failed = 0;
 let noise = 0;
 
-// Every mode, not just the first: `tsconfig.bundler.json` extends the Node one
-// and could override `skipLibCheck` back to `true`, making the mode that
-// catches the most consumer-visible errors vacuous while still exiting 0.
+// Every mode: `tsconfig.bundler.json` extends the Node one and could override
+// `skipLibCheck` back to `true`.
 for (const mode of modes) assertFixtureStillChecks(mode.tsconfig);
 
 for (const mode of modes) {

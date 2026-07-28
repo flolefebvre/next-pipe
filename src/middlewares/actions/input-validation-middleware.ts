@@ -9,12 +9,9 @@ export class InputValidationMiddleware<TSchema extends z.ZodType> extends Middle
   async before(arg: { input: unknown }) {
     const parse = this.schema.safeParse(arg.input);
     if (!parse.success) {
-      // Named against zod's *exported* alias. `flattenError` is declared as
-      // returning the non-exported `_FlattenedError`, which emit cannot name:
-      // it inlines the body, and the inlined body still references `U`, whose
-      // `= string` default went with the dropped declaration. The annotation
-      // must stay unwrapped — wrapping it in `Simplify` forces the same
-      // structural expansion and loses `U` again (#8).
+      // Annotate against zod's *exported* alias, unwrapped: `flattenError`
+      // returns the non-exported `_FlattenedError`, which emit inlines — and
+      // the inlined body loses the binding for `U`. `Simplify` re-inlines it (#8).
       const errors: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(parse.error);
       return interrupt(error("schema", errors));
     }

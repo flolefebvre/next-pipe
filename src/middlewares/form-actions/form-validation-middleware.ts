@@ -13,12 +13,9 @@ export class FormValidationMiddleware<
     this.input = arg.input;
     const parse = this.schema.safeParse(arg.input);
     if (!parse.success) {
-      // Named against zod's *exported* alias. `flattenError` is declared as
-      // returning the non-exported `_FlattenedError`, which emit cannot name:
-      // it inlines the body, and the inlined body still references `U`, whose
-      // `= string` default went with the dropped declaration. The annotation
-      // must stay unwrapped — the `Simplify` cast this replaced forced the
-      // same structural expansion, which is what lost `U` (#8).
+      // Annotate against zod's *exported* alias, unwrapped: `flattenError`
+      // returns the non-exported `_FlattenedError`, which emit inlines — and
+      // the inlined body loses the binding for `U`. `Simplify` re-inlines it (#8).
       const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
         parse.error,
       );
