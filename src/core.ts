@@ -19,7 +19,14 @@ abstract class Middleware<T = unknown> {
 }
 
 class PassThrough extends Middleware {
-  async before() {
+  // The parameter is unused, but its type is load-bearing. `ComposedMiddleware`
+  // types its own `before` as `Parameters<TFn["before"]>[0]`, which for a
+  // zero-argument `before` is `undefined` — and `undefined` does not satisfy
+  // `Middleware`'s `before(input: object)`. In `src` that constraint is only
+  // ever checked generically, so it passes; declaration emit writes the
+  // concrete `ComposedMiddleware<PassThrough, …>` and it fails there (#9).
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async before(_input: object) {
     return next({});
   }
   async after(t: this["After"]) {
