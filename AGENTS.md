@@ -21,12 +21,13 @@ Three things keep it from silently detecting nothing:
 - `skipLibCheck: false` in the fixture — `true` degrades broken declarations to
   `any` instead of erroring. The script refuses to run if it is set back.
 - The fixture resolves `@flefebvre/next-pipe` to `dist`, never `src`, where
-  declaration emit never runs.
+  declaration emit never runs. The script fails if the program reads any `src/`
+  file — a `paths` alias would otherwise make this a duplicate of `typecheck`.
 - Both resolution modes run (`tsconfig.json` nodenext, `tsconfig.bundler.json`
   what `create-next-app` generates); each catches errors the other misses (#7).
 
-Errors in `next`/`react-dom`'s own declarations are counted, never fatal;
-`--verbose` prints them.
+Errors in `next`'s own declarations are counted, never fatal; `--verbose` prints
+them.
 
 ## Agent skills
 

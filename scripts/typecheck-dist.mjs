@@ -104,6 +104,39 @@ function assertFixtureStillChecks(tsconfigFile) {
   }
 }
 
+/**
+ * The positive half of the same guard: assert the program read `dist` and did
+ * not read `src`.
+ *
+ * `skipLibCheck` is not the only way to make this vacuous — a `paths` alias to
+ * `src`, or a fixture file dropped from `include`, leaves the run reporting
+ * `OK` while checking types that were never emitted. Both halves are needed:
+ * "read some dist" alone is defeated by aliasing only the subpath whose
+ * declarations are broken, which still reads dist for everything else.
+ */
+function assertReadsDistNotSrc(mode) {
+  const result = spawnSync(
+    process.execPath,
+    [tsc, "--listFilesOnly", "--pretty", "false", "-p", mode.tsconfig],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  const read = (result.stdout ?? "").split("\n").filter(Boolean).map(relativeTo);
+  const fromSrc = read.filter((file) => file.startsWith("src/"));
+
+  if (fromSrc.length > 0) {
+    console.error(
+      `${mode.name}: the program read ${fromSrc.length} file(s) under src/ (${fromSrc[0]}) — the fixture must resolve @flefebvre/next-pipe to dist, where declaration emit has actually run. Checking src makes this a duplicate of \`pnpm typecheck\`.`,
+    );
+    process.exit(1);
+  }
+  if (!read.some(isOurs)) {
+    console.error(
+      `${mode.name}: the program read no file under dist/ — nothing that ships was checked.`,
+    );
+    process.exit(1);
+  }
+}
+
 if (!fs.existsSync(path.join(repoRoot, "dist"))) {
   console.error("dist/ is missing — run `pnpm run build` first.");
   process.exit(1);
@@ -131,7 +164,10 @@ let noise = 0;
 
 // Every mode: `tsconfig.bundler.json` extends the Node one and could override
 // `skipLibCheck` back to `true`.
-for (const mode of modes) assertFixtureStillChecks(mode.tsconfig);
+for (const mode of modes) {
+  assertFixtureStillChecks(mode.tsconfig);
+  assertReadsDistNotSrc(mode);
+}
 
 for (const mode of modes) {
   const result = spawnSync(

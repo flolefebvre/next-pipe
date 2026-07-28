@@ -13,7 +13,8 @@ export class QuerystringMiddleware<TSchema extends z.ZodObject> extends BeforeMi
     if (!parse.success) {
       // Annotate against zod's *exported* alias, unwrapped: `flattenError`
       // returns the non-exported `_FlattenedError`, which emit inlines — and
-      // the inlined body loses the binding for `U`. `Simplify` re-inlines it (#8).
+      // the inlined body loses the binding for `U`. Do not wrap it: `Simplify`
+      // re-expands the annotation and loses `U` again (#8).
       const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
         parse.error,
       );
