@@ -11,7 +11,10 @@ export class InputValidationMiddleware<TSchema extends z.ZodType> extends Middle
     if (!parse.success) {
       // Named against zod's *exported* alias. `flattenError` is declared as
       // returning the non-exported `_FlattenedError`, which emit cannot name:
-      // it inlines the body, losing `U`'s binding. `Simplify` re-inlines it (#8).
+      // it inlines the body, and the inlined body still references `U`, whose
+      // `= string` default went with the dropped declaration. The annotation
+      // must stay unwrapped — wrapping it in `Simplify` forces the same
+      // structural expansion and loses `U` again (#8).
       const errors: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(parse.error);
       return interrupt(error("schema", errors));
     }

@@ -10,9 +10,9 @@
  * declaration to `any` instead of erroring.
  *
  * `skipLibCheck: false` also checks `next`'s and `react-dom`'s own shipped
- * declarations, which are not clean and are not ours to fix. Errors inside
- * `node_modules` are therefore reported as a count and never fail the run;
- * only errors in `dist` and in the fixture do.
+ * declarations, which are not clean and are not ours to fix. Only errors in
+ * `dist` and in the fixture fail the run; everything else is reported as a
+ * count.
  */
 
 import { spawnSync } from "node:child_process";
@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureDir = path.join(repoRoot, "tests", "dist-consumer");
 const verbose = process.argv.includes("--verbose");
+const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
 
 /**
  * Links the repo into the fixture's own `node_modules` so that TypeScript
@@ -64,7 +65,13 @@ function relativeTo(file) {
 const isFixture = (file) => relativeTo(file).startsWith("tests/");
 const isOurs = (file) => {
   const relative = relativeTo(file);
-  return !relative.includes("node_modules") && (relative.startsWith("dist/") || isFixture(file));
+  // Deliberately a pure allowlist, with no `node_modules` exclusion: the
+  // fixture reaches `dist` *through* a symlink under its own `node_modules`,
+  // so excluding that path would reclassify every real failure as third-party
+  // noise the day tsc stops realpathing the symlink. Hence the unrealpathed
+  // form is matched too — scoped to this package, since plenty of third-party
+  // packages ship a `dist/` of their own.
+  return relative.startsWith("dist/") || relative.includes(`${pkg.name}/dist/`) || isFixture(file);
 };
 
 /**
@@ -123,7 +130,10 @@ const tsc = require.resolve("typescript/bin/tsc");
 let failed = 0;
 let noise = 0;
 
-assertFixtureStillChecks(modes[0].tsconfig);
+// Every mode, not just the first: `tsconfig.bundler.json` extends the Node one
+// and could override `skipLibCheck` back to `true`, making the mode that
+// catches the most consumer-visible errors vacuous while still exiting 0.
+for (const mode of modes) assertFixtureStillChecks(mode.tsconfig);
 
 for (const mode of modes) {
   const result = spawnSync(
@@ -140,10 +150,6 @@ for (const mode of modes) {
     process.exit(1);
   }
 
-  // An allowlist, not a `node_modules` blocklist: the fixture reaches `dist`
-  // *through* a symlink under its own `node_modules`, so a blocklist would
-  // reclassify every real failure as third-party noise the day tsc stops
-  // realpathing it.
   const ours = diagnostics.filter((d) => isOurs(d.file));
   noise += diagnostics.length - ours.length;
   failed += ours.length;

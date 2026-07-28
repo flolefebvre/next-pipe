@@ -41,7 +41,11 @@ abstract class BeforeMiddleware extends Middleware {
 }
 
 abstract class AfterMiddleware<T = unknown> extends Middleware<T> {
-  async before() {
+  // Parameter unused but load-bearing, for the reason given on `PassThrough`:
+  // this is the other zero-argument `before` in the public surface, so rooting
+  // a pipe at one would reproduce #9 in the consumer's own declaration emit.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async before(_input: object) {
     return next({});
   }
 }
