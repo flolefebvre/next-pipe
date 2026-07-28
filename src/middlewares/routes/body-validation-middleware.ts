@@ -1,4 +1,3 @@
-import type { Simplify } from "type-fest";
 import { BeforeMiddleware, error, interrupt, next, type MiddlewareConfig } from "../../core.js";
 import * as z from "zod";
 
@@ -11,10 +10,15 @@ export class BodyValidationMiddleware<TSchema extends z.ZodObject> extends Befor
     const body = await arg.req.json();
     const parse = this.schema.safeParse(body);
     if (!parse.success) {
-      const zodError = z.flattenError(parse.error);
+      // Named against zod's *exported* alias. `flattenError` is declared as
+      // returning the non-exported `_FlattenedError`, which emit cannot name:
+      // it inlines the body, losing `U`'s binding. `Simplify` re-inlines it (#8).
+      const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
+        parse.error,
+      );
       return interrupt({
         status: 400,
-        json: error("schema", zodError as Simplify<typeof zodError>),
+        json: error("schema", zodError),
       } as const);
     }
     return next({ input: parse.data });

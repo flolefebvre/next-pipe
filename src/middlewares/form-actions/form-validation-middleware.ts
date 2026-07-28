@@ -1,4 +1,3 @@
-import type { Simplify } from "type-fest";
 import { error, interrupt, merge, Middleware, next, type ActionResult } from "../../core.js";
 import * as z from "zod";
 
@@ -14,10 +13,15 @@ export class FormValidationMiddleware<
     this.input = arg.input;
     const parse = this.schema.safeParse(arg.input);
     if (!parse.success) {
-      const zodError = z.flattenError(parse.error);
+      // Named against zod's *exported* alias. `flattenError` is declared as
+      // returning the non-exported `_FlattenedError`, which emit cannot name:
+      // it inlines the body, losing `U`'s binding. `Simplify` re-inlines it (#8).
+      const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
+        parse.error,
+      );
       return interrupt({
         input: this.parsedPartial(),
-        ...error("schema", zodError as Simplify<typeof zodError>),
+        ...error("schema", zodError),
       });
     }
     return next({ input: parse.data });

@@ -1,4 +1,3 @@
-import type { Simplify } from "type-fest";
 import { BeforeMiddleware, error, interrupt, next, type MiddlewareConfig } from "../../core.js";
 import * as z from "zod";
 
@@ -12,10 +11,15 @@ export class QuerystringMiddleware<TSchema extends z.ZodObject> extends BeforeMi
     const query = Object.fromEntries(searchParams);
     const parse = this.schema.safeParse(query);
     if (!parse.success) {
-      const zodError = z.flattenError(parse.error);
+      // Named against zod's *exported* alias. `flattenError` is declared as
+      // returning the non-exported `_FlattenedError`, which emit cannot name:
+      // it inlines the body, losing `U`'s binding. `Simplify` re-inlines it (#8).
+      const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
+        parse.error,
+      );
       return interrupt({
         status: 400,
-        json: error("querystring", zodError as Simplify<typeof zodError>),
+        json: error("querystring", zodError),
       } as const);
     }
     return next({ query: parse.data });
