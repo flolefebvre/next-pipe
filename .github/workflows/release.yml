@@ -101,27 +101,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Built here rather than carried over from the `ci` job: that runs on its own
-      # runner, and the tarball should come from this exact commit. `build` cleans first.
-      - name: Build
-        run: pnpm run build
-
-      - name: Pack the tarball
-        run: pnpm pack --pack-destination "$RUNNER_TEMP"
-
-      # npm, not pnpm, because `pnpm publish` has no `--provenance`. Run from a scratch
-      # directory and hand npm the finished tarball, because npm refuses to run *anywhere
-      # inside this repo*: `devEngines.packageManager` in package.json pins pnpm, and npm
-      # exits EBADDEVENGINES ("Invalid name pnpm does not match npm") on every command in
-      # that tree — `npm publish` included. Publishing a pre-packed tarball also means no
-      # lifecycle script re-runs, so what ships is byte-for-byte what the step above
-      # inspected. Naming the file from the tag re-asserts that tag and artifact agree.
+      # `prepublishOnly` (clean + build) fires here, so `dist/` is rebuilt from this exact
+      # commit rather than inherited from the `ci` job's runner.
+      #
+      # npm, not pnpm, because `pnpm publish` has no `--provenance` flag. That means npm
+      # has to be able to run in this tree, which is why package.json carries no
+      # `devEngines.packageManager`: npm exits EBADDEVENGINES on every command in a repo
+      # that pins a different package manager, `npm publish` included.
       #
       # `--access public` is required for the first publish of a scoped package; scoped
       # packages default to restricted. `--provenance` needs `id-token: write` above.
-      #
-      # `setup-node` wrote its auth `.npmrc` to $RUNNER_TEMP and pointed
-      # NPM_CONFIG_USERCONFIG at it, so authentication follows npm out of the repo.
       #
       # The job-level NODE_AUTH_TOKEN covers the first publish, when the package does not
       # yet exist on npm and so has no settings page on which to configure a trusted
@@ -130,8 +119,7 @@ jobs:
       # job's credential check, and the NPM_TOKEN secret. Provenance is unaffected either
       # way — it comes from the OIDC token, not from how npm authenticated the publish.
       - name: Publish to npm
-        working-directory: ${{ runner.temp }}
-        run: npm publish --provenance --access public "flefebvre-next-pipe-${GITHUB_REF_NAME#v}.tgz"
+        run: npm publish --provenance --access public
 
       - name: Create the GitHub release
         env:

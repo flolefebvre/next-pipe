@@ -110,13 +110,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.6.0",
-      "onFail": "download"
-    }
-  },
   "dependencies": {
     "type-fest": "^5.7.0"
   }
