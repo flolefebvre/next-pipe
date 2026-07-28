@@ -19,14 +19,24 @@ It is deliberately **not** part of `pnpm run gate` yet: it fails today, on real
 bugs in the emitted declarations (see issues #7, #8, #9). It joins the gate once
 those land.
 
-Two details make it work, and breaking either makes it silently detect nothing:
+Three details make it work, and breaking any of them makes it silently detect
+nothing:
 
 - The fixture sets `skipLibCheck: false`. `true` — the library's own setting and
   the Next.js default — suppresses errors inside `.d.ts` files and degrades the
-  offending types to `any` instead of erroring.
+  offending types to `any` instead of erroring. The script refuses to run if the
+  fixture ever sets it back to `true`.
 - The fixture has its own tsconfig and is excluded from the root one. It must
   resolve `@flefebvre/next-pipe` to `dist`, never compile against `src`, where
   the types are computed structurally and declaration emit never runs.
+- It runs **twice**: `tsconfig.json` resolves as Node ESM (`nodenext`) and
+  `tsconfig.bundler.json` as a bundler does, which is what `create-next-app`
+  generates. Module resolution decides which of a
+  dependency's declaration files is read, so it decides which broken emitted
+  types resolve anyway: the `z.z.core.…` references of issue #7 resolve
+  harmlessly under NodeNext, via zod's CJS default interop, and fail with
+  TS2694 under bundler — which is what a Next.js consumer experiences. Each
+  mode catches errors the other misses.
 
 `skipLibCheck: false` also surfaces errors inside `next` and `react-dom`'s own
 declarations. Those are reported as a count and never fail the run; only errors

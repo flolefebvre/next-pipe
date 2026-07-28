@@ -56,6 +56,17 @@ function parseDiagnostics(output) {
   return diagnostics;
 }
 
+/** tsc reports paths relative to the repo root; normalize the odd absolute one. */
+function relativeTo(file) {
+  return path.relative(repoRoot, path.resolve(repoRoot, file)).split(path.sep).join("/");
+}
+
+const isFixture = (file) => relativeTo(file).startsWith("tests/");
+const isOurs = (file) => {
+  const relative = relativeTo(file);
+  return !relative.includes("node_modules") && (relative.startsWith("dist/") || isFixture(file));
+};
+
 /**
  * A failed shape assertion reads as `Type 'false' does not satisfy the
  * constraint 'true'`, which names nothing. The assertion's own name is on the
@@ -72,6 +83,21 @@ function namedAssertion(diagnostic) {
   return null;
 }
 
+/**
+ * Fails loudly if the fixture has been configured into detecting nothing.
+ * `skipLibCheck: true` makes the whole check vacuous while still exiting 0,
+ * which is the one failure mode indistinguishable from success.
+ */
+function assertFixtureStillChecks(tsconfigFile) {
+  const source = fs.readFileSync(tsconfigFile, "utf8");
+  if (/"skipLibCheck"\s*:\s*true/.test(source)) {
+    console.error(
+      `${path.relative(repoRoot, tsconfigFile)} sets skipLibCheck: true — that suppresses every error inside .d.ts files, which is exactly what this check exists to surface.`,
+    );
+    process.exit(1);
+  }
+}
+
 if (!fs.existsSync(path.join(repoRoot, "dist"))) {
   console.error("dist/ is missing — run `pnpm run build` first.");
   process.exit(1);
@@ -79,46 +105,76 @@ if (!fs.existsSync(path.join(repoRoot, "dist"))) {
 
 linkPackageIntoFixture();
 
+// Module resolution decides which of a dependency's declaration files is read,
+// so it decides which broken emitted types resolve anyway. Both modes are run:
+// `tsconfig.json` is Node ESM, `tsconfig.bundler.json` is what a Next.js app
+// uses, and each catches errors the other misses.
+const modes = [
+  { name: "node (module: nodenext)", tsconfig: path.join(fixtureDir, "tsconfig.json") },
+  {
+    name: "bundler (module: esnext — what create-next-app generates)",
+    tsconfig: path.join(fixtureDir, "tsconfig.bundler.json"),
+  },
+];
+
 const require = createRequire(import.meta.url);
 const tsc = require.resolve("typescript/bin/tsc");
-const result = spawnSync(
-  process.execPath,
-  [tsc, "--noEmit", "--pretty", "false", "-p", path.join(fixtureDir, "tsconfig.json")],
-  { cwd: repoRoot, encoding: "utf8" },
-);
 
-const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-const diagnostics = parseDiagnostics(output);
-const ours = diagnostics.filter((d) => !d.file.includes("node_modules"));
-const noise = diagnostics.length - ours.length;
+let failed = 0;
+let noise = 0;
 
-if (diagnostics.length === 0 && result.status !== 0) {
-  console.error(output || `tsc exited with status ${result.status}`);
-  process.exit(1);
-}
+assertFixtureStillChecks(modes[0].tsconfig);
 
-for (const diagnostic of ours) {
-  console.error(diagnostic.lines.join("\n"));
-  const assertion = diagnostic.code === "TS2344" ? namedAssertion(diagnostic) : null;
-  if (assertion) console.error(`  failed assertion: ${assertion}`);
+for (const mode of modes) {
+  const result = spawnSync(
+    process.execPath,
+    [tsc, "--noEmit", "--pretty", "false", "-p", mode.tsconfig],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  const diagnostics = parseDiagnostics(output);
+
+  if (diagnostics.length === 0 && result.status !== 0) {
+    console.error(output || `tsc exited with status ${result.status}`);
+    process.exit(1);
+  }
+
+  // An allowlist, not a `node_modules` blocklist: the fixture reaches `dist`
+  // *through* a symlink under its own `node_modules`, so a blocklist would
+  // reclassify every real failure as third-party noise the day tsc stops
+  // realpathing it.
+  const ours = diagnostics.filter((d) => isOurs(d.file));
+  noise += diagnostics.length - ours.length;
+  failed += ours.length;
+
+  console.error(`\n── ${mode.name} ─────────────`);
+  if (ours.length === 0) console.error("no errors in the built declarations or the fixture");
+
+  for (const diagnostic of ours) {
+    console.error(diagnostic.lines.join("\n"));
+    const assertion = isFixture(diagnostic.file) ? namedAssertion(diagnostic) : null;
+    if (assertion) console.error(`  failed assertion: ${assertion}`);
+  }
+
+  if (verbose) {
+    for (const diagnostic of diagnostics.filter((d) => !isOurs(d.file)))
+      console.error(diagnostic.lines.join("\n"));
+  }
 }
 
 if (noise > 0) {
   const suffix = verbose ? "" : " (re-run with --verbose to print them)";
   console.error(
-    `\n${noise} error(s) inside node_modules — third-party declarations surfaced by skipLibCheck: false, not failures of this check${suffix}`,
+    `\n${noise} error(s) outside the package — third-party declarations surfaced by skipLibCheck: false, not failures of this check${suffix}`,
   );
-  if (verbose) {
-    for (const diagnostic of diagnostics.filter((d) => d.file.includes("node_modules")))
-      console.error(diagnostic.lines.join("\n"));
-  }
 }
 
-if (ours.length > 0) {
+if (failed > 0) {
   console.error(
-    `\nTYPECHECK:DIST FAILED — ${ours.length} error(s) in the built declarations or in the consumer fixture.`,
+    `\nTYPECHECK:DIST FAILED — ${failed} error(s) in the built declarations or in the consumer fixture.`,
   );
   process.exit(1);
 }
 
-console.log("TYPECHECK:DIST OK");
+console.log("\nTYPECHECK:DIST OK");
