@@ -1,5 +1,5 @@
 import { error, interrupt, Middleware, next, type ActionResult } from "../../core.js";
-import z from "zod";
+import * as z from "zod";
 
 export class InputValidationMiddleware<TSchema extends z.ZodType> extends Middleware<ActionResult> {
   constructor(private schema: TSchema) {
@@ -9,7 +9,11 @@ export class InputValidationMiddleware<TSchema extends z.ZodType> extends Middle
   async before(arg: { input: unknown }) {
     const parse = this.schema.safeParse(arg.input);
     if (!parse.success) {
-      const errors = z.flattenError(parse.error);
+      // Annotate against zod's *exported* alias, unwrapped: `flattenError`
+      // returns the non-exported `_FlattenedError`, which emit inlines — and
+      // the inlined body loses the binding for `U`. Do not wrap it: `Simplify`
+      // re-expands the annotation and loses `U` again (#8).
+      const errors: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(parse.error);
       return interrupt(error("schema", errors));
     }
     return next({ input: parse.data });

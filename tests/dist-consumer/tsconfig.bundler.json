@@ -1,0 +1,16 @@
+{
+  // The same fixture under the resolution mode `create-next-app` generates.
+  //
+  // It is not a duplicate of the Node one: module resolution decides which of
+  // a dependency's declaration files is read. Under NodeNext, `import z from
+  // "zod"` in an emitted `.d.ts` lands on zod's CJS declarations, where the
+  // CommonJS default-interop makes the broken `z.z.core.…` references resolve
+  // anyway. Under bundler, `export default z` is taken literally, `z.z` does
+  // not exist, and the same declarations fail with TS2694 — which is what a
+  // Next.js consumer actually experiences.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  }
+}

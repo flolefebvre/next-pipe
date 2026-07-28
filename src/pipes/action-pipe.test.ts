@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { actionPipe } from "./action-pipe.js";
 import { success } from "../core.js";
-import z from "zod";
+import * as z from "zod";
 
 test("no-input action returns its success result", async () => {
   const handler = actionPipe().handle(async () => success({ ok: true }));

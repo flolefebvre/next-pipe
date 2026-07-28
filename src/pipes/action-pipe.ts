@@ -1,4 +1,4 @@
-import type z from "zod";
+import type * as z from "zod";
 import { entry, Pipe, createPipe, type ActionResult } from "../core.js";
 import { OutputTypeMiddleware } from "../middlewares/output-type-middleware.js";
 import { InputValidationMiddleware } from "../middlewares/actions/input-validation-middleware.js";

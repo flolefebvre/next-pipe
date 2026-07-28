@@ -1,6 +1,5 @@
-import type { Simplify } from "type-fest";
 import { error, interrupt, merge, Middleware, next, type ActionResult } from "../../core.js";
-import z from "zod";
+import * as z from "zod";
 
 export class FormValidationMiddleware<
   TSchema extends z.ZodObject,
@@ -14,10 +13,16 @@ export class FormValidationMiddleware<
     this.input = arg.input;
     const parse = this.schema.safeParse(arg.input);
     if (!parse.success) {
-      const zodError = z.flattenError(parse.error);
+      // Annotate against zod's *exported* alias, unwrapped: `flattenError`
+      // returns the non-exported `_FlattenedError`, which emit inlines — and
+      // the inlined body loses the binding for `U`. Do not wrap it: `Simplify`
+      // re-expands the annotation and loses `U` again (#8).
+      const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
+        parse.error,
+      );
       return interrupt({
         input: this.parsedPartial(),
-        ...error("schema", zodError as Simplify<typeof zodError>),
+        ...error("schema", zodError),
       });
     }
     return next({ input: parse.data });

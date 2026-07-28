@@ -8,6 +8,27 @@ For formatting, run `pnpm run format`.
 For validations, run `pnpm run typecheck`, `pnpm run lint`, `pnpm run test` or `pnpm run build`.
 For the full gate, run `pnpm run gate`.
 
+## `pnpm run typecheck:dist`
+
+Builds, then typechecks the shipped `dist/**/*.d.ts` from a consumer's point of
+view: the fixture in `tests/dist-consumer/` imports the package through its real
+`exports` subpaths and asserts the _resolved shape_ of the public types, so an
+`any` where a concrete type belongs fails. Runs in `pnpm run gate`, in place of
+`pnpm run build` — it builds first.
+
+Three things keep it from silently detecting nothing:
+
+- `skipLibCheck: false` in the fixture — `true` degrades broken declarations to
+  `any` instead of erroring. The script refuses to run if it is set back.
+- The fixture resolves `@flefebvre/next-pipe` to `dist`, never `src`, where
+  declaration emit never runs. The script fails if the program reads any `src/`
+  file — a `paths` alias would otherwise make this a duplicate of `typecheck`.
+- Both resolution modes run (`tsconfig.json` nodenext, `tsconfig.bundler.json`
+  what `create-next-app` generates); each catches errors the other misses (#7).
+
+Errors in `next`'s own declarations are counted, never fatal; `--verbose` prints
+them.
+
 ## Agent skills
 
 ### Issue tracker

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { entry, Pipe, success } from "../../core.js";
 import type { Expect } from "../../../tests/helpers.js";
 import type { IsEqual } from "type-fest";
-import z from "zod";
+import * as z from "zod";
 import { FormValidationMiddleware } from "./form-validation-middleware.js";
 
 const schema = z.object({ name: z.string() });

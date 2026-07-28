@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { formActionPipe } from "./form-action-pipe.js";
-import z from "zod";
+import * as z from "zod";
 import { success } from "../core.js";
 
 test("OK", async () => {

@@ -1,0 +1,22 @@
+{
+  // A consumer's tsconfig, not the library's: it never reads `src`, only the
+  // built `dist` reached through the package's `exports` map.
+  //
+  // `skipLibCheck: false` is the whole point — it is `true` in the library's
+  // own tsconfig and is the Next.js default in real apps, and it silently
+  // degrades a broken emitted declaration to `any` instead of erroring.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

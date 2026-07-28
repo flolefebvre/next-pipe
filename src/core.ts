@@ -69,8 +69,20 @@ type MiddlewareShape<
   before: (input: TBeforeInput) => Promise<TBeforeOutput>;
 };
 
+/**
+ * Not `Parameters<T["before"]>[0]`: that conflates "takes no argument" with
+ * `undefined`, which fails `Middleware`'s `before(input: object)` once emitted
+ * (#9). The `& object` is load-bearing too — while `T` is generic the
+ * conditional is deferred, and a deferred conditional is not accepted as
+ * satisfying `object`.
+ */
+type BeforeInput<T extends Middleware> = (Parameters<T["before"]> extends [infer P, ...unknown[]]
+  ? P
+  : object) &
+  object;
+
 type GetRawInput<T> = T extends { rawInput: infer R extends unknown[] } ? R : [];
-type GetRawInputFromMiddleware<T extends Middleware> = GetRawInput<Parameters<T["before"]>[0]>;
+type GetRawInputFromMiddleware<T extends Middleware> = GetRawInput<BeforeInput<T>>;
 
 function interrupt<T>(value: T) {
   return { interrupt: value };
@@ -95,7 +107,7 @@ abstract class ComposedMiddleware<
     super();
   }
 
-  async before(input: Parameters<TFn["before"]>[0]) {
+  async before(input: BeforeInput<TFn>) {
     const before = (await this.fn.before(input)) as Awaited<ReturnType<TFn["before"]>>;
 
     if ("next" in before) {

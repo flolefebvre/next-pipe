@@ -9,5 +9,17 @@ export default defineConfig([
   {
     files: ["src/**/*.{ts,tsx}"],
     extends: [tseslint.configs.recommended],
+    rules: {
+      // Not `no-restricted-imports`: given a restricted `importNames`, it also
+      // rejects `import * as`, which is the form we want.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportDeclaration[source.value='zod'] > ImportDefaultSpecifier",
+          message:
+            'Use `import * as z from "zod"`. A default import makes declaration emit write unresolvable `z.z.core.…` types (see #7).',
+        },
+      ],
+    },
   },
 ]);
