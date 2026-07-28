@@ -10,6 +10,7 @@ import {
   next,
   PassThrough,
   createPipe,
+  merge,
   Pipe,
   success,
   __MIDDLEWARE_CONFIG,
@@ -671,4 +672,35 @@ test("a passthrough root returns the handler value unchanged", async () => {
 test("single-argument error wraps the value as the error payload", () => {
   expect(error("boom")).toStrictEqual({ status: "error", error: "boom" });
   expect(error({ code: 42 })).toStrictEqual({ status: "error", error: { code: 42 } });
+});
+
+/**
+ * `merge`'s body is an assertion, so its declared type holds whatever the body
+ * does — only the runtime expectation below can catch a reversed spread.
+ */
+test("merge lets the right operand win, in the value as well as the type", () => {
+  const merged = merge({ a: 1, b: "x" }, { b: 2, c: true });
+  type TEST = Expect<IsEqual<typeof merged, { a: number; b: number; c: boolean }>>;
+
+  expect(merged).toStrictEqual({ a: 1, b: 2, c: true });
+});
+
+test("a middleware that branches its next() shadows keys per branch", async () => {
+  class Branching extends BeforeMiddleware {
+    async before(arg: { id: string }) {
+      if (arg.id === "") return next({ id: 0 });
+      return next({ tenant: "acme" as const });
+    }
+  }
+
+  const pipe = new Pipe(entry((id: string) => ({ id }))).use(Branching);
+  type HandleParam = Parameters<Parameters<typeof pipe.handle>[0]>[0];
+  // Each branch overrides `id` on its own. Merging the union as a whole instead
+  // would intersect the shadowed key across every member — `id: string & number`
+  // — and silently hand the handler an `id: never`.
+  type TEST = Expect<IsEqual<HandleParam, { id: number } | { id: string; tenant: "acme" }>>;
+
+  const handle = pipe.handle(async (arg) => ("tenant" in arg ? arg.tenant : arg.id));
+  expect(await handle("")).toBe(0);
+  expect(await handle("x")).toBe("acme");
 });
