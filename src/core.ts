@@ -5,15 +5,14 @@ type Assume<T, U> = T extends U ? T : U;
 /**
  * type-fest's `Merge`, not a local `Omit<T1, keyof T2> & T2`: `Omit` is not
  * distributive, so merging into a union kept only the keys common to every
- * member. A multi-branch handler's result collapsed to a bare discriminant —
- * `{ status: "success" | "error" }`, no `data`, no `error` — which no longer
- * satisfies `ActionResponse`, the bound `getActionError` checks its argument
- * against, so the call site stopped compiling (#10). type-fest distributes over
- * both operands and simplifies, so each member is merged on its own and keeps
- * its own payload.
+ * member — collapsing a multi-branch result to a bare discriminant carrying no
+ * payload (#10). Both operands distribute, so each member merges on its own.
  *
  * The cast is required: while `T1`/`T2` are generic the distribution stays
- * deferred, and TS will not accept the spread's `T1 & T2` as satisfying it.
+ * deferred, and TS will not accept the spread's `T1 & T2` as satisfying it. It
+ * also leaves the body unchecked, so the declared type holds whatever the
+ * spread does — the runtime assertion in `core.test.ts` is the only guard on
+ * the operand order.
  */
 function merge<T1, T2>(obj1: T1, obj2: T2): Merge<T1, T2> {
   return { ...obj1, ...obj2 } as Merge<T1, T2>;

@@ -53,12 +53,7 @@ type FieldErrorsAreTyped = Expect<
 
 /* --- form actions, multi-branch handler (#10) --- */
 
-/**
- * A handler with more than one return shape. `after` merges the echoed `input`
- * into a *union*, and a non-distributive merge kept only the keys common to
- * every member — collapsing the result to `{ status: "error" | "success";
- * input }`, which drops `error`/`data` and stops satisfying `ActionResponse`.
- */
+/** A handler with more than one return shape — the union that collapsed in #10. */
 const multiBranchFormAction = formActionPipe(schema).handle(async ({ input }) => {
   if (input.name === "taken") return error("taken", "already used" as const);
   return success(input.name);
@@ -88,14 +83,13 @@ type MultiBranchResultIsDiscriminated = Expect<
 
 declare const multiBranchResult: MultiBranchResult;
 
-// The call site from #10: a collapsed union is not assignable to `ActionResponse`,
-// so this argument fails to typecheck before it ever gets to the key.
+// The argument is the assertion: a collapsed union is not assignable to
+// `ActionResponse`, so this fails before the key is ever considered.
 const takenError = getActionError(multiBranchResult, "taken");
 
 type TakenErrorIsNotAny = Expect<Not<IsAny<typeof takenError>>>;
 type TakenErrorIsTyped = Expect<IsEqual<typeof takenError, "already used" | null>>;
 
-// The middleware's own error key stays reachable on the same union.
 type SchemaErrorSurvivesMultiBranch = Expect<
   IsEqual<
     ReturnType<typeof getActionError<MultiBranchResult, "schema">>,

@@ -18,12 +18,7 @@ test("OK", async () => {
   expect(result.status).toBe("success");
 });
 
-/**
- * A handler with more than one return shape (#10). `after` merges the echoed
- * `input` into each member separately, so every branch keeps its own payload
- * key — a collapsed `{ status: "error" | "success"; input }` no longer
- * satisfies `ActionResponse` and breaks `getActionError` at the call site.
- */
+/** Regression guard for #10: a handler returning more than one shape. */
 const multiBranch = formActionPipe(z.object({ value: z.string() })).handle(async ({ input }) => {
   if (input.value === "taken") return error("taken", "already used" as const);
   return success();
@@ -66,10 +61,10 @@ const multiBranch = formActionPipe(z.object({ value: z.string() })).handle(async
     >
   >;
 
-  // The symptom the issue actually reports: `getActionError` bounds its
-  // argument by `ActionResponse`, which a collapsed union fails. Asserted here
-  // and not only in `tests/dist-consumer/` so the fast gate reproduces it too.
-  // Type-level only — instantiating it is enough to check the bound.
+  // What #10 actually reports is the call site: `getActionError` bounds its
+  // argument by `ActionResponse`, which a collapsed union fails. Deliberately
+  // duplicated in `tests/dist-consumer/` — only that copy covers declaration
+  // emit, only this one runs in the fast gate.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type CALL_SITE = Expect<
     IsEqual<
