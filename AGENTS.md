@@ -15,9 +15,8 @@ view: the fixture in `tests/dist-consumer/` imports the package through its real
 `exports` subpaths and asserts the _resolved shape_ of the public types, so an
 `any` where a concrete type belongs fails the check.
 
-It is deliberately **not** part of `pnpm run gate` yet: it fails today, on real
-bugs in the emitted declarations (see issues #7, #8, #9). It joins the gate once
-those land.
+It runs as part of `pnpm run gate`, in place of the bare `pnpm run build` — it
+builds first, so running both would build twice.
 
 Three details make it work, and breaking any of them makes it silently detect
 nothing:
@@ -33,10 +32,10 @@ nothing:
   `tsconfig.bundler.json` as a bundler does, which is what `create-next-app`
   generates. Module resolution decides which of a
   dependency's declaration files is read, so it decides which broken emitted
-  types resolve anyway: the `z.z.core.…` references of issue #7 resolve
-  harmlessly under NodeNext, via zod's CJS default interop, and fail with
-  TS2694 under bundler — which is what a Next.js consumer experiences. Each
-  mode catches errors the other misses.
+  types resolve anyway. Issue #7 is the worked example: its `z.z.core.…`
+  references resolved harmlessly under NodeNext, via zod's CJS default interop,
+  and failed with TS2694 only under bundler — which is what a Next.js consumer
+  experiences. Each mode catches errors the other misses.
 
 `skipLibCheck: false` also surfaces errors inside `next` and `react-dom`'s own
 declarations. Those are reported as a count and never fail the run; only errors
