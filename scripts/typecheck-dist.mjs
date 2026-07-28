@@ -40,6 +40,7 @@ function linkPackageIntoFixture() {
 }
 
 const ERROR_LINE = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/;
+const TYPE_ALIAS = /^\s*(?:export\s+)?type\s+(\w+)/;
 
 /** Groups tsc's flat output into one entry per error, continuation lines included. */
 function parseDiagnostics(output) {
@@ -47,12 +48,28 @@ function parseDiagnostics(output) {
   for (const line of output.split("\n")) {
     const match = ERROR_LINE.exec(line);
     if (match) {
-      diagnostics.push({ file: match[1], code: match[4], lines: [line] });
+      diagnostics.push({ file: match[1], line: Number(match[2]), code: match[4], lines: [line] });
     } else if (line.trim() !== "" && diagnostics.length > 0) {
       diagnostics.at(-1).lines.push(line);
     }
   }
   return diagnostics;
+}
+
+/**
+ * A failed shape assertion reads as `Type 'false' does not satisfy the
+ * constraint 'true'`, which names nothing. The assertion's own name is on the
+ * `type X = Expect<…>` line at or just above the error, so quote it.
+ */
+function namedAssertion(diagnostic) {
+  const file = path.join(repoRoot, diagnostic.file);
+  if (!fs.existsSync(file)) return null;
+  const source = fs.readFileSync(file, "utf8").split("\n");
+  for (let i = diagnostic.line - 1; i >= 0 && i > diagnostic.line - 12; i--) {
+    const match = TYPE_ALIAS.exec(source[i] ?? "");
+    if (match) return match[1];
+  }
+  return null;
 }
 
 if (!fs.existsSync(path.join(repoRoot, "dist"))) {
@@ -80,7 +97,11 @@ if (diagnostics.length === 0 && result.status !== 0) {
   process.exit(1);
 }
 
-for (const diagnostic of ours) console.error(diagnostic.lines.join("\n"));
+for (const diagnostic of ours) {
+  console.error(diagnostic.lines.join("\n"));
+  const assertion = diagnostic.code === "TS2344" ? namedAssertion(diagnostic) : null;
+  if (assertion) console.error(`  failed assertion: ${assertion}`);
+}
 
 if (noise > 0) {
   const suffix = verbose ? "" : " (re-run with --verbose to print them)";
