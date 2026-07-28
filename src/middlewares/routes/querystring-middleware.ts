@@ -1,6 +1,6 @@
 import type { Simplify } from "type-fest";
 import { BeforeMiddleware, error, interrupt, next, type MiddlewareConfig } from "../../core.js";
-import z from "zod";
+import * as z from "zod";
 
 export class QuerystringMiddleware<TSchema extends z.ZodObject> extends BeforeMiddleware {
   constructor(private schema: TSchema) {

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation.js";
-import z from "zod";
+import * as z from "zod";
 import { BeforeMiddleware, next } from "../../core.js";
 
 /**

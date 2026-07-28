@@ -6,7 +6,7 @@ import type { Expect } from "../../../tests/helpers.js";
 import type { IsEqual } from "type-fest";
 import type { JsonValue } from "../../types.js";
 import type { NextResponse } from "next/server.js";
-import z from "zod";
+import * as z from "zod";
 
 const schema = z.object({ key: z.string() });
 

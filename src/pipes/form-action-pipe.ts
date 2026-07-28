@@ -1,4 +1,4 @@
-import type z from "zod";
+import type * as z from "zod";
 import { FormValidationMiddleware } from "../middlewares/form-actions/form-validation-middleware.js";
 import { entry, Pipe } from "../core.js";
 

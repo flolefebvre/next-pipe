@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import z from "zod";
+import * as z from "zod";
 import { pagePipe } from "../../pipes/page-pipe.js";
 import { SearchParamsMiddleware } from "./search-params-middleware.js";
 

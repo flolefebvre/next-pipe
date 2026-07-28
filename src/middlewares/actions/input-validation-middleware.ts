@@ -1,5 +1,5 @@
 import { error, interrupt, Middleware, next, type ActionResult } from "../../core.js";
-import z from "zod";
+import * as z from "zod";
 
 export class InputValidationMiddleware<TSchema extends z.ZodType> extends Middleware<ActionResult> {
   constructor(private schema: TSchema) {
