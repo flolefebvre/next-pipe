@@ -1,9 +1,20 @@
-import type { ExtendsStrict, If, IsEqual, Simplify } from "type-fest";
+import type { ExtendsStrict, If, IsEqual, Merge } from "type-fest";
 
 type Assume<T, U> = T extends U ? T : U;
-type Merge<T1, T2> = Omit<T1, keyof T2> & T2;
-function merge<T1, T2>(obj1: T1, obj2: T2): Simplify<Merge<T1, T2>> {
-  return { ...obj1, ...obj2 };
+
+/**
+ * type-fest's `Merge`, not a local `Omit<T1, keyof T2> & T2`: `Omit` is not
+ * distributive, so merging into a union kept only the keys common to every
+ * member. A multi-branch handler's result collapsed to a bare discriminant —
+ * `{ status: "success" | "error" }`, no `data`, no `error` — which no longer
+ * satisfies `ActionResult` (#10). type-fest distributes over both operands and
+ * simplifies, so each member is merged on its own and keeps its own payload.
+ *
+ * The cast is required: while `T1`/`T2` are generic the distribution stays
+ * deferred, and TS will not accept the spread's `T1 & T2` as satisfying it.
+ */
+function merge<T1, T2>(obj1: T1, obj2: T2): Merge<T1, T2> {
+  return { ...obj1, ...obj2 } as Merge<T1, T2>;
 }
 
 abstract class Middleware<T = unknown> {
