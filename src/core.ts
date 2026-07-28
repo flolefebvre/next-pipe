@@ -70,14 +70,11 @@ type MiddlewareShape<
 };
 
 /**
- * The input a middleware's `before` accepts. `Parameters<T["before"]>[0]` alone
- * conflates "takes no argument" with `undefined`, and `undefined` does not
- * satisfy `Middleware`'s `before(input: object)` — which only surfaces once a
- * concrete `ComposedMiddleware<…>` is written out by declaration emit (#9).
- *
- * The trailing `& object` is required: while `T` is generic the conditional is
- * deferred, and the checker cannot prove a deferred conditional satisfies
- * `object`. The intersection gives it that proof without narrowing `P`.
+ * Not `Parameters<T["before"]>[0]`: that conflates "takes no argument" with
+ * `undefined`, which fails `Middleware`'s `before(input: object)` once emitted
+ * (#9). The `& object` is load-bearing too — while `T` is generic the
+ * conditional is deferred, and a deferred conditional is not accepted as
+ * satisfying `object`.
  */
 type BeforeInput<T extends Middleware> = (Parameters<T["before"]> extends [infer P, ...unknown[]]
   ? P

@@ -13,33 +13,20 @@ For the full gate, run `pnpm run gate`.
 Builds, then typechecks the shipped `dist/**/*.d.ts` from a consumer's point of
 view: the fixture in `tests/dist-consumer/` imports the package through its real
 `exports` subpaths and asserts the _resolved shape_ of the public types, so an
-`any` where a concrete type belongs fails the check.
+`any` where a concrete type belongs fails. Runs in `pnpm run gate`, in place of
+`pnpm run build` — it builds first.
 
-It runs as part of `pnpm run gate`, in place of the bare `pnpm run build` — it
-builds first, so running both would build twice.
+Three things keep it from silently detecting nothing:
 
-Three details make it work, and breaking any of them makes it silently detect
-nothing:
+- `skipLibCheck: false` in the fixture — `true` degrades broken declarations to
+  `any` instead of erroring. The script refuses to run if it is set back.
+- The fixture resolves `@flefebvre/next-pipe` to `dist`, never `src`, where
+  declaration emit never runs.
+- Both resolution modes run (`tsconfig.json` nodenext, `tsconfig.bundler.json`
+  what `create-next-app` generates); each catches errors the other misses (#7).
 
-- The fixture sets `skipLibCheck: false`. `true` — the library's own setting and
-  the Next.js default — suppresses errors inside `.d.ts` files and degrades the
-  offending types to `any` instead of erroring. The script refuses to run if the
-  fixture ever sets it back to `true`.
-- The fixture has its own tsconfig and is excluded from the root one. It must
-  resolve `@flefebvre/next-pipe` to `dist`, never compile against `src`, where
-  the types are computed structurally and declaration emit never runs.
-- It runs **twice**: `tsconfig.json` resolves as Node ESM (`nodenext`) and
-  `tsconfig.bundler.json` as a bundler does, which is what `create-next-app`
-  generates. Module resolution decides which of a
-  dependency's declaration files is read, so it decides which broken emitted
-  types resolve anyway. Issue #7 is the worked example: its `z.z.core.…`
-  references resolved harmlessly under NodeNext, via zod's CJS default interop,
-  and failed with TS2694 only under bundler — which is what a Next.js consumer
-  experiences. Each mode catches errors the other misses.
-
-`skipLibCheck: false` also surfaces errors inside `next` and `react-dom`'s own
-declarations. Those are reported as a count and never fail the run; only errors
-in `dist` and in the fixture do. Pass `--verbose` to print them.
+Errors in `next`/`react-dom`'s own declarations are counted, never fatal;
+`--verbose` prints them.
 
 ## Agent skills
 
