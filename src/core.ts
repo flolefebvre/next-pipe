@@ -7,8 +7,10 @@ type Assume<T, U> = T extends U ? T : U;
  * distributive, so merging into a union kept only the keys common to every
  * member. A multi-branch handler's result collapsed to a bare discriminant —
  * `{ status: "success" | "error" }`, no `data`, no `error` — which no longer
- * satisfies `ActionResult` (#10). type-fest distributes over both operands and
- * simplifies, so each member is merged on its own and keeps its own payload.
+ * satisfies `ActionResponse`, the bound `getActionError` checks its argument
+ * against, so the call site stopped compiling (#10). type-fest distributes over
+ * both operands and simplifies, so each member is merged on its own and keeps
+ * its own payload.
  *
  * The cast is required: while `T1`/`T2` are generic the distribution stays
  * deferred, and TS will not accept the spread's `T1 & T2` as satisfying it.
