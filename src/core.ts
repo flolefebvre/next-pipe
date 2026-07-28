@@ -19,11 +19,7 @@ abstract class Middleware<T = unknown> {
 }
 
 class PassThrough extends Middleware {
-  // Unused, but do not drop it: `ComposedMiddleware` types its own `before` as
-  // `Parameters<TFn["before"]>[0]`, and for a zero-argument `before` that is
-  // `undefined`, which fails `Middleware`'s constraint once emitted (#9).
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async before(_input: object) {
+  async before() {
     return next({});
   }
   async after(t: this["After"]) {
@@ -38,9 +34,7 @@ abstract class BeforeMiddleware extends Middleware {
 }
 
 abstract class AfterMiddleware<T = unknown> extends Middleware<T> {
-  // Unused, but do not drop it — see `PassThrough.before` (#9).
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async before(_input: object) {
+  async before() {
     return next({});
   }
 }
@@ -75,8 +69,23 @@ type MiddlewareShape<
   before: (input: TBeforeInput) => Promise<TBeforeOutput>;
 };
 
+/**
+ * The input a middleware's `before` accepts. `Parameters<T["before"]>[0]` alone
+ * conflates "takes no argument" with `undefined`, and `undefined` does not
+ * satisfy `Middleware`'s `before(input: object)` — which only surfaces once a
+ * concrete `ComposedMiddleware<…>` is written out by declaration emit (#9).
+ *
+ * The trailing `& object` is required: while `T` is generic the conditional is
+ * deferred, and the checker cannot prove a deferred conditional satisfies
+ * `object`. The intersection gives it that proof without narrowing `P`.
+ */
+type BeforeInput<T extends Middleware> = (Parameters<T["before"]> extends [infer P, ...unknown[]]
+  ? P
+  : object) &
+  object;
+
 type GetRawInput<T> = T extends { rawInput: infer R extends unknown[] } ? R : [];
-type GetRawInputFromMiddleware<T extends Middleware> = GetRawInput<Parameters<T["before"]>[0]>;
+type GetRawInputFromMiddleware<T extends Middleware> = GetRawInput<BeforeInput<T>>;
 
 function interrupt<T>(value: T) {
   return { interrupt: value };
@@ -101,7 +110,7 @@ abstract class ComposedMiddleware<
     super();
   }
 
-  async before(input: Parameters<TFn["before"]>[0]) {
+  async before(input: BeforeInput<TFn>) {
     const before = (await this.fn.before(input)) as Awaited<ReturnType<TFn["before"]>>;
 
     if ("next" in before) {
