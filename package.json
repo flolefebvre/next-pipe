@@ -69,6 +69,7 @@
   "scripts": {
     "build": "pnpm run clean && tsc -p tsconfig.build.json && echo 'BUILD OK'",
     "typecheck": "tsc --noEmit && echo 'TYPECHECK OK'",
+    "typecheck:dist": "pnpm run build && node scripts/typecheck-dist.mjs",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run clean && pnpm run build",
     "format": "pnpm exec prettier -w src && echo 'FORMAT OK'",
