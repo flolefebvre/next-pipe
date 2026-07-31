@@ -1,0 +1,25 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/flolefebvre/next-pipe",
+  "public_key": "pk_4Czm4B19o3pEf9xBjNGnP",
+  "projectTitle": "next-pipe",
+  "description": "A typed, onion-model middleware system for Next.js App Router route handlers, server actions, form actions and pages, plus a generated typed client for routes.",
+  "folders": ["docs"],
+  "excludeFolders": ["docs/agents"],
+  "excludeFiles": ["AGENTS.md", "CLAUDE.md"],
+  "rules": [
+    "Every server entry point goes through a pipe: routePipe<RouteContext<\"/path\">>(), actionPipe(schema?), formActionPipe(schema?), pagePipe<PageProps<\"/path\">>(), layoutPipe<LayoutProps<\"/path\">>(), templatePipe(). Never write a bare handler or action.",
+    "Subpath imports are strict and there is no root export: pipes from @flefebvre/next-pipe/pipes; next, interrupt, success, error, json from /server; callRoute, useApiCall, getActionError from /client; middlewares from /middlewares and /middlewares/routes.",
+    "Route handlers return { status, json } via the json(status, body) helper, never a raw Response or NextResponse. ResponseMiddleware, which routePipe() wires in for you, performs the conversion.",
+    "Route interrupts and manual returns need `as const` (the json() helper applies it). Without it, status widens to number and the generated client's response union stops discriminating.",
+    "Interrupt in the surface's dialect: routes use interrupt({ status, json } as const); actions and form actions use interrupt(error(key, data)); pages, layouts and templates use redirect() or notFound(), which throw and need no interrupt.",
+    "A middleware is a class extending BeforeMiddleware, AfterMiddleware or Middleware. before() returns next({ ... }) to merge typed values into the handler input, or interrupt(value) to short-circuit. after() runs in reverse order.",
+    "A middleware declares its dependency on an earlier one by typing its before() parameter, e.g. before(arg: { user: SafeUser }). Composing it too early is then a compile error rather than a runtime bug.",
+    "Re-run codegen (`next-pipe gen`) after adding, removing or moving routes, verbs or path params. Body and query type changes flow through `import type` automatically and need no re-run.",
+    "Client code imports only from @flefebvre/next-pipe/client and the generated routes barrel, never from /server, /pipes or middleware files.",
+    "zod is an optional peer dependency, needed only by the validation middlewares and by actionPipe(schema)/formActionPipe(schema). The schemaless actionPipe()/formActionPipe() work without it.",
+    "Requires Next.js >= 16 (App Router), React >= 19, TypeScript >= 5 and Node >= 22. RouteContext, PageProps and LayoutProps are Next.js-generated globals and need no import.",
+    "This is a 0.x package: minor versions may contain breaking changes. If a snippet does not typecheck, trust the installed package's .d.ts in node_modules over the docs."
+  ],
+  "previousVersions": [{ "tag": "v0.1.0" }]
+}
