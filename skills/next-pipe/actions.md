@@ -122,7 +122,7 @@ Rules:
     });
   ```
 
-  The auth interrupt happens upstream of validation, so that branch carries no `input` echo (`input` is optional in the result union). Only forms with nothing before validation need the `formActionPipe(schema)` shorthand.
+  The auth interrupt happens upstream of validation, so that branch has no `input` property at all — on the client, narrow before reading it: `const input = result && "input" in result ? result.input : undefined`. Only forms with nothing before validation need the `formActionPipe(schema)` shorthand.
 - Happy path usually ends in `redirect(...)`; only failures flow back into `useActionState`.
 
 ## Done when

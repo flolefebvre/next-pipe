@@ -94,6 +94,15 @@ export const createNote = formActionPipe()
 
 The handler's `input` is the parsed, schema-typed value — `FormValidationMiddleware`'s output overrides the raw entries — plus whatever earlier middlewares merged (`user` here). One consequence of the ordering: an auth interrupt never reaches the validation middleware, so that result branch carries no echoed `input` — in the action's result union, `input` exists only on the branches that pass through validation. That's the point: an unauthorized submitter gets nothing back, not even their own input replayed.
 
+On the client, that union means `result?.input` alone no longer typechecks — the unauthorized branch has no `input` property. Narrow it away first:
+
+```tsx
+const [result, dispatch, isPending] = useActionState(createNote, null);
+const input = result && "input" in result ? result.input : undefined;
+
+<input name="content" defaultValue={input?.content} />;
+```
+
 On the happy path a form action often ends in `redirect(...)` and returns nothing; only failures flow back into `useActionState`.
 
 ## Without a schema
