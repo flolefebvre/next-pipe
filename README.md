@@ -36,7 +36,8 @@ The 401 and 400 paths you didn't write are still there — handled by the middle
 
 ```sh
 pnpm add @flefebvre/next-pipe
-# optional, for the validation middlewares and actionPipe(schema)/formActionPipe(schema):
+# optional, for the validation middlewares and actionPipe(schema)/formActionPipe(schema);
+# the schemaless actionPipe()/formActionPipe() work without it:
 pnpm add zod
 ```
 
@@ -125,7 +126,7 @@ if (res.status === 200) {
 | --- | --- | --- |
 | `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe` | [route](docs/route-pipe.md) · [action](docs/action-pipe.md) · [form](docs/form-action-pipe.md) · [page](docs/page-pipe.md) |
 | `@flefebvre/next-pipe/server` | `Pipe`, `entry`, `createPipe`, `next`, `interrupt`, `success`, `error`, `json`, `merge` | [Core concepts](docs/core-concepts.md) |
-| `@flefebvre/next-pipe/client` | `callRoute`, `defineRoute`, `useApiCall`, `getActionError` | [Client & hooks](docs/client.md) |
+| `@flefebvre/next-pipe/client` | `callRoute`, `defineRoute`, `useApiCall`, `getActionError`, `getActionInput` | [Client & hooks](docs/client.md) |
 | `@flefebvre/next-pipe/middlewares` | `Middleware`, `BeforeMiddleware`, `AfterMiddleware`, `OutputTypeMiddleware` + authoring types | [Custom middlewares](docs/custom-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/routes` | `ResponseMiddleware`, `BodyValidationMiddleware`, `QuerystringMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |

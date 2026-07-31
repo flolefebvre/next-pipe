@@ -1,6 +1,6 @@
 {
   "name": "@flefebvre/next-pipe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A typed, onion-model middleware system for Next.js route handlers, server actions, form actions, and pages.",
   "type": "module",
   "license": "MIT",

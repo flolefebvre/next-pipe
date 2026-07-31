@@ -10,7 +10,7 @@ next-pipe ships a small set of middlewares covering the mechanical parts of each
 | [`InputValidationMiddleware`](#inputvalidationmiddleware) | `.../middlewares/actions` | actions | `actionPipe(schema)` |
 | [`FormValidationMiddleware`](#formvalidationmiddleware) | `.../middlewares/form-actions` | form actions | `formActionPipe(schema)` |
 | [`SearchParamsMiddleware`](#searchparamsmiddleware) | `.../middlewares/pages` | pages | — |
-| [`OutputTypeMiddleware`](#outputtypemiddleware) | `.../middlewares` | any | `actionPipe()`, `pagePipe()` |
+| [`OutputTypeMiddleware`](#outputtypemiddleware) | `.../middlewares` | any | `actionPipe()`, `formActionPipe()`, `pagePipe()` |
 
 The validation middlewares require the optional `zod` (v4) peer dependency.
 
@@ -57,11 +57,11 @@ Auto-wired by `actionPipe(schema)`; validates the action's single argument.
 
 ## FormValidationMiddleware
 
-Auto-wired by `formActionPipe(schema)`; validates the object collected from `FormData`.
+Auto-wired first by `formActionPipe(schema)`, or [chained explicitly](form-action-pipe.md#middlewares-on-form-actions) on a schemaless `formActionPipe()` to place validation elsewhere in the chain. Validates the object collected from `FormData`.
 
-- **Success** → merges the parsed value as `input`.
+- **Success** → merges the parsed value as `input` (overriding the raw entries downstream).
 - **Failure** → interrupts with `error("schema", flattenedZodError)` **plus** an `input` field echoing back the submitted values (best-effort parsed per field; invalid fields become `undefined`).
-- Its `after` also merges that echoed `input` into handler-returned results, so forms can repopulate whatever the outcome — see [formActionPipe](form-action-pipe.md#how-input-echoing-works).
+- Its `after` also merges that echoed `input` into handler-returned results, so forms can repopulate whatever the outcome — see [formActionPipe](form-action-pipe.md#how-input-echoing-works). Results produced upstream of this middleware carry no `input`.
 
 ## SearchParamsMiddleware
 

@@ -7,7 +7,7 @@ description: Write Next.js server code with next-pipe (@flefebvre/next-pipe). Us
 
 next-pipe (`@flefebvre/next-pipe`) is a typed, onion-model middleware system for the four Next.js App Router server entry points — route handlers, server actions, form actions, and pages — plus a generated, fully typed client for routes.
 
-> This skill documents **v0.1.0**. If the installed `@flefebvre/next-pipe` version differs, or a snippet from this skill doesn't typecheck, trust the package's `.d.ts` in `node_modules` over this text.
+> This skill documents **v0.2.0**. If the installed `@flefebvre/next-pipe` version differs, or a snippet from this skill doesn't typecheck, trust the package's `.d.ts` in `node_modules` over this text.
 
 ## The onion
 
@@ -19,7 +19,7 @@ A pipe is a chain of `.use(Middleware, ...args)` calls sealed with `.handle(fn)`
 | --- | --- | --- | --- |
 | Route handler | `app/**/route.ts` | `routePipe<RouteContext<"/path">>()` | `json(status, body)` |
 | Server action (called from code) | `"use server"` file | `actionPipe(schema?)` | `success(data?)` / `error(key, data)` |
-| Form action (`<form>` + `useActionState`) | `"use server"` file | `formActionPipe(schema)` | `error(key, data)` or `redirect(...)` |
+| Form action (`<form>` + `useActionState`) | `"use server"` file | `formActionPipe(schema?)` | `error(key, data)` or `redirect(...)` |
 | Page / server component | `app/**/page.tsx` | `pagePipe<PageProps<"/path">>()` | JSX (`React.ReactNode`) |
 
 `RouteContext` and `PageProps` are Next.js-generated globals — no import needed.
@@ -32,7 +32,7 @@ Subpath imports are strict — these are the only entry points:
 | --- | --- |
 | `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe` |
 | `@flefebvre/next-pipe/server` | `next`, `interrupt`, `success`, `error`, `json`, `Pipe`, `entry`, `createPipe`, `merge` |
-| `@flefebvre/next-pipe/client` | `callRoute`, `useApiCall`, `getActionError`, `defineRoute` |
+| `@flefebvre/next-pipe/client` | `callRoute`, `useApiCall`, `getActionError`, `getActionInput`, `defineRoute` |
 | `@flefebvre/next-pipe/middlewares` | `BeforeMiddleware`, `AfterMiddleware`, `Middleware`, `OutputTypeMiddleware`, `MiddlewareConfig` |
 | `@flefebvre/next-pipe/middlewares/routes` | `ResponseMiddleware`, `BodyValidationMiddleware`, `QuerystringMiddleware` |
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` |

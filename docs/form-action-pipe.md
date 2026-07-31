@@ -1,10 +1,11 @@
 # formActionPipe — form actions
 
-`formActionPipe(schema)` builds server actions designed for `<form action={...}>` + React's `useActionState`. It differs from [`actionPipe`](action-pipe.md) in three ways:
+`formActionPipe` builds server actions designed for `<form action={...}>` + React's `useActionState`. Two forms:
 
-1. **Signature** — the produced action is `(prevState, formData: FormData) => ...`, exactly what `useActionState` expects.
-2. **Parsing** — the `FormData` entries are collected into an object and validated against the zod schema by [`FormValidationMiddleware`](built-in-middlewares.md#formvalidationmiddleware).
-3. **Echoing input back** — every result (validation failure *or* handler return) carries an `input` field with the values the user typed, so the form can repopulate after a failed submit.
+- `formActionPipe(schema)` — the `FormData` entries are validated against a zod schema before anything else runs, and submitted values are echoed back on every result.
+- `formActionPipe()` — no validation wired in: the handler receives the raw entries. Chain [`FormValidationMiddleware`](built-in-middlewares.md#formvalidationmiddleware) yourself if you want validation elsewhere in the chain (see [Middlewares on form actions](#middlewares-on-form-actions)).
+
+Both differ from [`actionPipe`](action-pipe.md) in the same way: the produced action is `(prevState, formData: FormData) => ...`, exactly what `useActionState` expects, and the `FormData` entries are collected into an object with `Object.fromEntries`.
 
 ```ts
 "use server";
@@ -67,13 +68,15 @@ Note the three pieces working together:
 
 ## How input echoing works
 
-On a validation failure, the middleware can't hand you `z.infer<typeof schema>` — the input didn't parse. Instead it re-parses each field *individually*, best-effort: valid fields keep their parsed values, invalid or missing ones become `undefined`. The result is attached as `input` on the interrupt, and the middleware's `after` merges the same `input` into handler-returned results too. That's why `result?.input.username` is available on **every** non-null state, whichever key failed.
+On a validation failure, the middleware can't hand you `z.infer<typeof schema>` — the input didn't parse. Instead it re-parses each field *individually*, best-effort: valid fields keep their parsed values, invalid or missing ones become `undefined`. The result is attached as `input` on the interrupt, and the middleware's `after` merges the same `input` into handler-returned results too. That's why `result?.input.username` is available on every result that passes through `FormValidationMiddleware`, whichever key failed.
+
+Echoing is the middleware's feature: results produced *upstream* of it — an interrupt from a middleware placed before validation, or any result of a schemaless `formActionPipe()` — carry no `input` field.
 
 Form fields arrive as strings (`Object.fromEntries(formData)`), so use `z.coerce.*` in the schema for numbers, dates, or checkboxes.
 
 ## Middlewares on form actions
 
-`formActionPipe` composes like any other pipe — auth gates, entity loaders, and other action-flavored middlewares slot in after the schema validation:
+`formActionPipe` composes like any other pipe. With a schema, validation is the first middleware and everything else slots in behind it:
 
 ```ts
 export const createNote = formActionPipe(createNoteSchema)
@@ -84,7 +87,41 @@ export const createNote = formActionPipe(createNoteSchema)
   });
 ```
 
+Starting from `formActionPipe()` instead, nothing is wired in — chain `FormValidationMiddleware` yourself to choose where validation sits in the chain:
+
+```ts
+import { FormValidationMiddleware } from "@flefebvre/next-pipe/middlewares/form-actions";
+
+export const createNote = formActionPipe()
+  .use(AuthMiddleware) // runs before the schema
+  .use(FormValidationMiddleware, createNoteSchema)
+  .handle(async ({ input, user }) => {
+    // input: parsed and typed by the schema, exactly as with formActionPipe(schema)
+    db.createNote(input.content, user.username);
+    redirect("/notes");
+  });
+```
+
+Either way the handler's `input` is the parsed, schema-typed value — `FormValidationMiddleware`'s output overrides the raw entries. One consequence of placing middlewares *before* validation: their interrupts never reach the middleware, so those result branches carry no echoed `input`, and `result?.input` alone no longer typechecks. Read the echo with [`getActionInput`](client.md#getactioninput) instead — it returns the echoed values, or `null` on branches that carry none:
+
+```tsx
+const input = getActionInput(result);
+<input name="content" defaultValue={input?.content} />;
+```
+
 On the happy path a form action often ends in `redirect(...)` and returns nothing; only failures flow back into `useActionState`.
+
+## Without a schema
+
+`formActionPipe()` on its own suits form-shaped buttons and hand-rolled parsing: the handler receives the collected entries as `input` (a `Record<string, FormDataEntryValue>` — values are `string | File`), nothing is validated, and no `input` is echoed back. The output is still pinned to the `success`/`error` protocol, and zod is not required at all — same as `actionPipe()`.
+
+```ts
+export const logout = formActionPipe().handle(async () => {
+  await clearSession();
+  redirect("/login");
+  return success();
+});
+```
 
 ## See also
 
