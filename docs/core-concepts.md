@@ -81,7 +81,7 @@ new Pipe(entry((req: Request, ctx: Context) => ({ req, ctx })))
   .use(ResponseMiddleware);
 ```
 
-The built-in pipes each pick the right entry for their surface (route: `(req, ctx)`, action: `(input)`, form action: `(prevState, formData)`, page: `(props)`), so you rarely touch `entry` directly — it's there when you want a [custom pipe](page-pipe.md#rolling-your-own-page-pipe).
+The built-in pipes each pick the right entry for their surface (route: `(req, ctx)`, action: `(input)`, form action: `(prevState, formData)`, page/layout/template: `(props)`), so you rarely touch `entry` directly — it's there when you need a custom pipe for a surface without one (say, `default.tsx`): the snippet above *is* the recipe, plus an `OutputTypeMiddleware` pin when the output should be contractually fixed.
 
 ## The success/error protocol (actions)
 

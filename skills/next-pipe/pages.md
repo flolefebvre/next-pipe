@@ -85,23 +85,24 @@ export default pagePipe<PageProps<"/notes">>()
 - A failing schema calls `notFound()` — the 404 page. Since query strings are user-editable URLs, **prefer lenient fields** (`.catch(default)`, `.optional().catch(undefined)`); reserve strict (404ing) fields for params the page truly cannot render without.
 - Values arrive as `string | string[] | undefined` — use `z.coerce.*` for non-strings.
 
-## Layouts (custom prop shapes)
+## Layouts and templates
 
-For props beyond `params`/`searchParams` — e.g. a layout's `children` — build the pipe explicitly (this is `pagePipe`'s own recipe):
+`layoutPipe()` / `templatePipe()` run the same onion in front of `layout.tsx` / `template.tsx`; the handler receives `children` (output pinned to `React.ReactNode`). Gating a layout gates every page beneath it:
 
 ```tsx
 // app/(account)/layout.tsx
-import { entry, Pipe } from "@flefebvre/next-pipe/server";
-import { OutputTypeMiddleware } from "@flefebvre/next-pipe/middlewares";
+import { layoutPipe } from "@flefebvre/next-pipe/pipes";
 
-type Props = { children: React.ReactNode };
-
-export default new Pipe(entry((props: Props) => ({ ...props })))
-  .use(OutputTypeMiddleware<React.ReactNode>)
+export default layoutPipe()
   .use(AuthMiddleware)
   .handle(async ({ children, user }) => <AccountShell user={user}>{children}</AccountShell>);
 ```
 
+- Pass `LayoutProps<"/path">` (generated global) as the generic for typed `params` and parallel-route slots (`app/x/@modal` → `modal: React.ReactNode` in the input). No generic → input is `children` only.
+- Layouts never receive `searchParams` (they don't re-render on navigation) — the constraint rejects it at compile time; a type error mentioning `never` on the generic is that guard firing. Read search params in the page instead.
+- `templatePipe` is the `template.tsx` twin: same mechanics, and its constraint also rejects `params` — templates get only a keyed `children`. Only these two named props are guarded; structural typing can't ban arbitrary extras.
+
 ## Done when
 
 - The page typechecks, gates redirect (never interrupt), `params`/`searchParams` are awaited, and search-param schemas are lenient unless a 404 is genuinely correct.
+- Layouts/templates use their dedicated pipes; anything needing `searchParams` lives in a page, not a layout.
