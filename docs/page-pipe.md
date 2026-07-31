@@ -106,26 +106,8 @@ export default pagePipe<PageProps<"/notes">>()
 
 A query failing the schema renders the 404 page — keep fields lenient with `.catch(...)` fallbacks unless the page truly cannot render without them.
 
-### Rolling your own page pipe
-
-For prop shapes beyond `params`/`searchParams` — a **layout**, say, which receives `children` — build a pipe with an explicit [`entry`](core-concepts.md#entry--adapting-the-raw-call-signature):
-
-```tsx
-// app/(account)/layout.tsx
-import { entry, Pipe } from "@flefebvre/next-pipe/server";
-import { OutputTypeMiddleware } from "@flefebvre/next-pipe/middlewares";
-
-type Props = { children: React.ReactNode };
-
-export default new Pipe(entry((props: Props) => ({ ...props })))
-  .use(OutputTypeMiddleware<React.ReactNode>)
-  .use(AuthMiddleware)
-  .handle(async ({ children, user }) => <AccountShell user={user}>{children}</AccountShell>);
-```
-
-This is the exact recipe `pagePipe` itself uses, minus the fixed prop shape.
-
 ## See also
 
+- [layoutPipe](layout-pipe.md) / [templatePipe](template-pipe.md) — the same onion in front of layouts and templates
 - [Core concepts](core-concepts.md) — `entry`, execution order, `OutputTypeMiddleware`
 - [Write your own middleware](custom-middlewares.md) — gates, loaders, and parametrized middlewares

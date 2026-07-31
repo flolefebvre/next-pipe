@@ -124,7 +124,7 @@ if (res.status === 200) {
 
 | Import | Exports | Docs |
 | --- | --- | --- |
-| `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe` | [route](docs/route-pipe.md) · [action](docs/action-pipe.md) · [form](docs/form-action-pipe.md) · [page](docs/page-pipe.md) |
+| `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe`, `layoutPipe`, `templatePipe` | [route](docs/route-pipe.md) · [action](docs/action-pipe.md) · [form](docs/form-action-pipe.md) · [page](docs/page-pipe.md) · [layout](docs/layout-pipe.md) · [template](docs/template-pipe.md) |
 | `@flefebvre/next-pipe/server` | `Pipe`, `entry`, `createPipe`, `next`, `interrupt`, `success`, `error`, `json`, `merge` | [Core concepts](docs/core-concepts.md) |
 | `@flefebvre/next-pipe/client` | `callRoute`, `defineRoute`, `useApiCall`, `getActionError`, `getActionInput` | [Client & hooks](docs/client.md) |
 | `@flefebvre/next-pipe/middlewares` | `Middleware`, `BeforeMiddleware`, `AfterMiddleware`, `OutputTypeMiddleware` + authoring types | [Custom middlewares](docs/custom-middlewares.md) |
@@ -141,6 +141,7 @@ if (res.status === 200) {
 - **[actionPipe](docs/action-pipe.md)** — typed server actions: zod input validation, the `success`/`error` result shape, reading errors with `getActionError`.
 - **[formActionPipe](docs/form-action-pipe.md)** — `<form>` actions: `FormData` parsing, schema validation, typed field errors back to the form.
 - **[pagePipe](docs/page-pipe.md)** — run the same middlewares in front of a page or server component (e.g. redirect guests to `/login`).
+- **[layoutPipe](docs/layout-pipe.md) / [templatePipe](docs/template-pipe.md)** — gate a whole segment from its layout or template; typed `children`, `params`, and parallel-route slots via `LayoutProps`.
 - **[Built-in middlewares](docs/built-in-middlewares.md)** — body, querystring, input and form validation; response shaping; output typing.
 - **[Write your own middleware](docs/custom-middlewares.md)** — `BeforeMiddleware`, `AfterMiddleware`, parametrized constructors (`.use(M, ...args)`), interrupts, and the `config` type channel that feeds the generated client.
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
