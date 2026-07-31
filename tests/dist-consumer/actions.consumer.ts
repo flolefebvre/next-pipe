@@ -97,6 +97,41 @@ type SchemaErrorSurvivesMultiBranch = Expect<
   >
 >;
 
+/* --- form actions, no schema (#15) --- */
+
+const noSchemaFormAction = formActionPipe().handle(async (arg) => {
+  type NoSchemaInputIsNotAny = Expect<Not<IsAny<(typeof arg)["input"]>>>;
+  type NoSchemaInputIsRawEntries = Expect<
+    IsEqual<typeof arg, { input: { [k: string]: FormDataEntryValue } }>
+  >;
+  return success(Object.keys(arg.input).length);
+});
+
+type NoSchemaResult = Awaited<ReturnType<typeof noSchemaFormAction>>;
+
+// No FormValidationMiddleware: no "schema" error branch, no `input` echo.
+type NoSchemaResultIsTyped = Expect<IsEqual<NoSchemaResult, { status: "success"; data: number }>>;
+
+const noSchemaMultiBranch = formActionPipe().handle(async ({ input }) => {
+  if (input.name === "taken") return error("taken", "already used" as const);
+  return success();
+});
+
+type NoSchemaMultiBranchResult = Awaited<ReturnType<typeof noSchemaMultiBranch>>;
+
+type NoSchemaMultiBranchIsDiscriminated = Expect<
+  IsEqual<
+    NoSchemaMultiBranchResult,
+    | { status: "error"; error: { type: "taken"; data: "already used" } }
+    | { status: "success"; data: undefined }
+  >
+>;
+
+declare const noSchemaMultiBranchResult: NoSchemaMultiBranchResult;
+const noSchemaTakenError = getActionError(noSchemaMultiBranchResult, "taken");
+
+type NoSchemaTakenErrorIsTyped = Expect<IsEqual<typeof noSchemaTakenError, "already used" | null>>;
+
 /* --- server actions --- */
 
 const action = actionPipe(schema).handle(async (arg) => {
@@ -122,6 +157,9 @@ export type {
   TakenErrorIsNotAny,
   TakenErrorIsTyped,
   SchemaErrorSurvivesMultiBranch,
+  NoSchemaResultIsTyped,
+  NoSchemaMultiBranchIsDiscriminated,
+  NoSchemaTakenErrorIsTyped,
   ActionErrorIsTyped,
 };
-export { formAction, action, multiBranchFormAction };
+export { formAction, action, multiBranchFormAction, noSchemaFormAction, noSchemaMultiBranch };
