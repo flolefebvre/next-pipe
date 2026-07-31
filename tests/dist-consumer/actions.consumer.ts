@@ -11,7 +11,7 @@ import type { IsAny, IsEqual } from "type-fest";
 import type { Expect, Not } from "../helpers.js";
 import { actionPipe, formActionPipe } from "@flefebvre/next-pipe/pipes";
 import { error, success } from "@flefebvre/next-pipe/server";
-import { getActionError } from "@flefebvre/next-pipe/client";
+import { getActionError, getActionInput } from "@flefebvre/next-pipe/client";
 
 const schema = z.object({ name: z.string() });
 
@@ -97,6 +97,13 @@ type SchemaErrorSurvivesMultiBranch = Expect<
   >
 >;
 
+const echoedInput = getActionInput(multiBranchResult);
+
+type EchoedInputIsNotAny = Expect<Not<IsAny<typeof echoedInput>>>;
+type EchoedInputIsTyped = Expect<
+  IsEqual<typeof echoedInput, { name?: string | undefined } | null>
+>;
+
 /* --- form actions, no schema (#15) --- */
 
 const noSchemaFormAction = formActionPipe().handle(async (arg) => {
@@ -157,6 +164,8 @@ export type {
   TakenErrorIsNotAny,
   TakenErrorIsTyped,
   SchemaErrorSurvivesMultiBranch,
+  EchoedInputIsNotAny,
+  EchoedInputIsTyped,
   NoSchemaResultIsTyped,
   NoSchemaMultiBranchIsDiscriminated,
   NoSchemaTakenErrorIsTyped,

@@ -1,6 +1,6 @@
 # Client & hooks
 
-`@flefebvre/next-pipe/client` is the consumer side of the [generated route builders](codegen.md): a tiny transport (`callRoute`), the builder factory the generated code uses (`defineRoute`), a pending-state hook (`useApiCall`), and a typed error reader for actions (`getActionError`).
+`@flefebvre/next-pipe/client` is the consumer side of the [generated route builders](codegen.md): a tiny transport (`callRoute`), the builder factory the generated code uses (`defineRoute`), a pending-state hook (`useApiCall`), and typed readers for action results (`getActionError`, `getActionInput`).
 
 ## The `routes` barrel
 
@@ -87,6 +87,21 @@ It accepts `null` (the `useActionState` initial state) and returns `null` for su
 ```ts
 setError(getActionError(res, "forbidden") ?? getActionError(res, "notFound") ?? "Error");
 ```
+
+## getActionInput
+
+The typed reader for the `input` field that [`FormValidationMiddleware` echoes](form-action-pipe.md#how-input-echoing-works) onto form-action results. It returns the echoed values — typed — or `null` when the result carries none (the `useActionState` initial `null`, or a branch produced [upstream of the validation middleware](form-action-pipe.md#middlewares-on-form-actions)):
+
+```tsx
+import { getActionInput } from "@flefebvre/next-pipe/client";
+
+const [result, dispatch, isPending] = useActionState(createNote, null);
+const input = getActionInput(result); // { content?: string } | null
+
+<input name="content" defaultValue={input?.content} />;
+```
+
+When every branch carries the echo (plain `formActionPipe(schema)`), reading `result?.input` directly is equivalent — `getActionInput` is for unions where some branches don't.
 
 ## defineRoute
 

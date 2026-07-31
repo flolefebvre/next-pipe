@@ -16,4 +16,11 @@ function getActionError<
   return null;
 }
 
-export { getActionError };
+function getActionInput<T extends ActionResponse>(value: T | null) {
+  if (value !== null && "input" in value)
+    return value.input as Simplify<Extract<T, { input: unknown }>["input"]>;
+
+  return null;
+}
+
+export { getActionError, getActionInput };

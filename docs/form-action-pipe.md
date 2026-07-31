@@ -102,7 +102,12 @@ export const createNote = formActionPipe()
   });
 ```
 
-Either way the handler's `input` is the parsed, schema-typed value — `FormValidationMiddleware`'s output overrides the raw entries. One consequence of placing middlewares *before* validation: their interrupts never reach the middleware, so those result branches carry no echoed `input`. On the client, `result?.input` alone then no longer typechecks — narrow the branches that lack it away first: `const input = result && "input" in result ? result.input : undefined`.
+Either way the handler's `input` is the parsed, schema-typed value — `FormValidationMiddleware`'s output overrides the raw entries. One consequence of placing middlewares *before* validation: their interrupts never reach the middleware, so those result branches carry no echoed `input`, and `result?.input` alone no longer typechecks. Read the echo with [`getActionInput`](client.md#getactioninput) instead — it returns the echoed values, or `null` on branches that carry none:
+
+```tsx
+const input = getActionInput(result);
+<input name="content" defaultValue={input?.content} />;
+```
 
 On the happy path a form action often ends in `redirect(...)` and returns nothing; only failures flow back into `useActionState`.
 

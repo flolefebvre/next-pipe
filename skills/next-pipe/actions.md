@@ -122,7 +122,7 @@ Rules:
     });
   ```
 
-  Interrupts from middlewares placed before validation carry no `input` property at all — on the client, narrow before reading it: `const input = result && "input" in result ? result.input : undefined`.
+  Interrupts from middlewares placed before validation carry no `input` property at all, so `result?.input` won't typecheck — read the echo with `getActionInput(result)` (from `@flefebvre/next-pipe/client`), which returns the echoed values or `null` on branches without them.
 - Happy path usually ends in `redirect(...)`; only failures flow back into `useActionState`.
 
 ## Done when

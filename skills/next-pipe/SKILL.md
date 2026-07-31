@@ -32,7 +32,7 @@ Subpath imports are strict — these are the only entry points:
 | --- | --- |
 | `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe` |
 | `@flefebvre/next-pipe/server` | `next`, `interrupt`, `success`, `error`, `json`, `Pipe`, `entry`, `createPipe`, `merge` |
-| `@flefebvre/next-pipe/client` | `callRoute`, `useApiCall`, `getActionError`, `defineRoute` |
+| `@flefebvre/next-pipe/client` | `callRoute`, `useApiCall`, `getActionError`, `getActionInput`, `defineRoute` |
 | `@flefebvre/next-pipe/middlewares` | `BeforeMiddleware`, `AfterMiddleware`, `Middleware`, `OutputTypeMiddleware`, `MiddlewareConfig` |
 | `@flefebvre/next-pipe/middlewares/routes` | `ResponseMiddleware`, `BodyValidationMiddleware`, `QuerystringMiddleware` |
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` |

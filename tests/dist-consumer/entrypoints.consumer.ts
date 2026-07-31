@@ -26,7 +26,13 @@ import type {
   JsonArray,
   JsonPrimitive,
 } from "@flefebvre/next-pipe/server";
-import { callRoute, defineRoute, getActionError, useApiCall } from "@flefebvre/next-pipe/client";
+import {
+  callRoute,
+  defineRoute,
+  getActionError,
+  getActionInput,
+  useApiCall,
+} from "@flefebvre/next-pipe/client";
 import type {
   RouteDefinition,
   RouteBuilder,
@@ -64,6 +70,7 @@ export {
   callRoute,
   defineRoute,
   getActionError,
+  getActionInput,
   useApiCall,
   routePipe,
   pagePipe,
