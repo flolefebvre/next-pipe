@@ -36,7 +36,8 @@ The 401 and 400 paths you didn't write are still there — handled by the middle
 
 ```sh
 pnpm add @flefebvre/next-pipe
-# optional, for the validation middlewares and actionPipe(schema)/formActionPipe(schema):
+# optional, for the validation middlewares and actionPipe(schema)/formActionPipe(schema);
+# the schemaless actionPipe()/formActionPipe() work without it:
 pnpm add zod
 ```
 
@@ -138,7 +139,7 @@ if (res.status === 200) {
 - **[Core concepts](docs/core-concepts.md)** — the onion model: `before`/`after` phases, `next` vs `interrupt`, how context merges across middlewares, and why interrupts flow back through the `after`s of earlier middlewares.
 - **[routePipe](docs/route-pipe.md)** — route handlers: response unions, `RouteContext` params, status/json typing.
 - **[actionPipe](docs/action-pipe.md)** — typed server actions: zod input validation, the `success`/`error` result shape, reading errors with `getActionError`.
-- **[formActionPipe](docs/form-action-pipe.md)** — `<form>` actions: `FormData` parsing, schema validation, typed field errors back to the form.
+- **[formActionPipe](docs/form-action-pipe.md)** — `<form>` actions: `FormData` parsing, schema validation (auto-wired or placed after an auth gate), typed field errors back to the form.
 - **[pagePipe](docs/page-pipe.md)** — run the same middlewares in front of a page or server component (e.g. redirect guests to `/login`).
 - **[Built-in middlewares](docs/built-in-middlewares.md)** — body, querystring, input and form validation; response shaping; output typing.
 - **[Write your own middleware](docs/custom-middlewares.md)** — `BeforeMiddleware`, `AfterMiddleware`, parametrized constructors (`.use(M, ...args)`), interrupts, and the `config` type channel that feeds the generated client.

@@ -53,7 +53,10 @@ if (res.status === "error") {
 
 ## formActionPipe
 
-Differences from `actionPipe`: the produced action is `(prevState, formData: FormData)` — exactly `useActionState`'s shape; the `FormData` is collected into an object and validated (`FormValidationMiddleware`, auto-wired); and every result carries an `input` field echoing what the user typed, for repopulating the form.
+Differences from `actionPipe`: the produced action is `(prevState, formData: FormData)` — exactly `useActionState`'s shape — and the `FormData` is collected into an object. Two forms:
+
+- `formActionPipe(schema)` — validation runs first (`FormValidationMiddleware`, auto-wired), and every result carries an `input` field echoing what the user typed, for repopulating the form.
+- `formActionPipe()` — nothing wired: the handler gets the raw entries (`input: Record<string, FormDataEntryValue>`), results carry no `input` echo, zod not required. Chain `FormValidationMiddleware` yourself to place validation *after* other middlewares (auth gates — see the rule below).
 
 ```ts
 "use server";
@@ -105,8 +108,21 @@ Rules:
 
 - Form fields arrive as strings — use `z.coerce.*` for numbers, dates, checkboxes.
 - Validation failures land under the `"schema"` key; handler business failures use their own keys — one typed union.
-- `result?.input.<field>` exists on **every** non-null result (echoed best-effort: invalid fields become `undefined`) — use it as `defaultValue` so failed submits don't wipe the form.
-- Middlewares compose as usual after the schema: `formActionPipe(schema).use(AuthMiddleware).handle(...)`.
+- `result?.input.<field>` exists on every non-null result that passed through `FormValidationMiddleware` — with `formActionPipe(schema)`, that's all of them (echoed best-effort: invalid fields become `undefined`) — use it as `defaultValue` so failed submits don't wipe the form.
+- Auth-gated form → gate **before** validation, so unauthenticated submits never reach the schema (no leaked field errors):
+
+  ```ts
+  import { FormValidationMiddleware } from "@flefebvre/next-pipe/middlewares/form-actions";
+
+  export const createNote = formActionPipe()
+    .use(AuthMiddleware)
+    .use(FormValidationMiddleware, createNoteSchema)
+    .handle(async ({ input, user }) => {
+      /* input: parsed, schema-typed */
+    });
+  ```
+
+  The auth interrupt happens upstream of validation, so that branch carries no `input` echo (`input` is optional in the result union). Only forms with nothing before validation need the `formActionPipe(schema)` shorthand.
 - Happy path usually ends in `redirect(...)`; only failures flow back into `useActionState`.
 
 ## Done when
