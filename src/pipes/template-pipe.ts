@@ -14,9 +14,7 @@ type TemplatePropsShape = {
  * constraint also rejects `params`, which templates never receive.
  */
 function templatePipe<Props extends TemplatePropsShape = { children: React.ReactNode }>() {
-  // The props argument is optional so handlers stay callable with no
-  // arguments in tests; Next itself always supplies it.
-  return new Pipe(entry((props?: Props) => ({ ...props }) as Props)).use(
+  return new Pipe(entry((props: Props) => ({ ...props }))).use(
     OutputTypeMiddleware<React.ReactNode>,
   );
 }

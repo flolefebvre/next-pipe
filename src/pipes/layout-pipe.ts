@@ -16,9 +16,7 @@ type LayoutPropsShape = {
  * holds `children` only.
  */
 function layoutPipe<Props extends LayoutPropsShape = { children: React.ReactNode }>() {
-  // The props argument is optional so handlers stay callable with no
-  // arguments in tests; Next itself always supplies it.
-  return new Pipe(entry((props?: Props) => ({ ...props }) as Props)).use(
+  return new Pipe(entry((props: Props) => ({ ...props }))).use(
     OutputTypeMiddleware<React.ReactNode>,
   );
 }
