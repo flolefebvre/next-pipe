@@ -43,7 +43,7 @@ test("middlewares can depend on layout params", async () => {
     .use(LoadMiddleware)
     .handle(async ({ entity, children }) => `${entity} wraps ${String(children)}`);
 
-  await expect(
-    handler({ children: "child", params: Promise.resolve({ id: "7" }) }),
-  ).resolves.toBe("entity-7 wraps child");
+  await expect(handler({ children: "child", params: Promise.resolve({ id: "7" }) })).resolves.toBe(
+    "entity-7 wraps child",
+  );
 });
