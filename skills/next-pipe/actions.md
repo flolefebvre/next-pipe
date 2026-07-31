@@ -56,7 +56,7 @@ if (res.status === "error") {
 Differences from `actionPipe`: the produced action is `(prevState, formData: FormData)` — exactly `useActionState`'s shape — and the `FormData` is collected into an object. Two forms:
 
 - `formActionPipe(schema)` — validation runs first (`FormValidationMiddleware`, auto-wired), and every result carries an `input` field echoing what the user typed, for repopulating the form.
-- `formActionPipe()` — nothing wired: the handler gets the raw entries (`input: Record<string, FormDataEntryValue>`), results carry no `input` echo, zod not required. Chain `FormValidationMiddleware` yourself to place validation *after* other middlewares (auth gates — see the rule below).
+- `formActionPipe()` — nothing wired: the handler gets the raw entries (`input: Record<string, FormDataEntryValue>`), results carry no `input` echo, zod not required. Chain `FormValidationMiddleware` yourself to place validation elsewhere in the chain (see the rule below).
 
 ```ts
 "use server";
@@ -109,20 +109,20 @@ Rules:
 - Form fields arrive as strings — use `z.coerce.*` for numbers, dates, checkboxes.
 - Validation failures land under the `"schema"` key; handler business failures use their own keys — one typed union.
 - `result?.input.<field>` exists on every non-null result that passed through `FormValidationMiddleware` — with `formActionPipe(schema)`, that's all of them (echoed best-effort: invalid fields become `undefined`) — use it as `defaultValue` so failed submits don't wipe the form.
-- Auth-gated form → gate **before** validation, so unauthenticated submits never reach the schema (no leaked field errors):
+- To place validation elsewhere in the chain, start from `formActionPipe()` and chain `FormValidationMiddleware` explicitly:
 
   ```ts
   import { FormValidationMiddleware } from "@flefebvre/next-pipe/middlewares/form-actions";
 
   export const createNote = formActionPipe()
-    .use(AuthMiddleware)
+    .use(AuthMiddleware) // runs before the schema
     .use(FormValidationMiddleware, createNoteSchema)
     .handle(async ({ input, user }) => {
       /* input: parsed, schema-typed */
     });
   ```
 
-  The auth interrupt happens upstream of validation, so that branch has no `input` property at all — on the client, narrow before reading it: `const input = result && "input" in result ? result.input : undefined`. Only forms with nothing before validation need the `formActionPipe(schema)` shorthand.
+  Interrupts from middlewares placed before validation carry no `input` property at all — on the client, narrow before reading it: `const input = result && "input" in result ? result.input : undefined`.
 - Happy path usually ends in `redirect(...)`; only failures flow back into `useActionState`.
 
 ## Done when
