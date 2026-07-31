@@ -5,7 +5,7 @@ import { pagePipe } from "./page-pipe.js";
 test("passes the handler's ReactNode through unchanged", async () => {
   const handler = pagePipe().handle(async () => "the page");
 
-  await expect(handler()).resolves.toBe("the page");
+  await expect(handler({})).resolves.toBe("the page");
 });
 
 test("threads typed params and searchParams into the handler", async () => {

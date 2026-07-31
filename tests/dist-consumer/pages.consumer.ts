@@ -16,4 +16,11 @@ const Page = pagePipe<{ searchParams: Promise<{ q?: string }> }>()
     return arg.query.q ?? "none";
   });
 
-export { Page };
+// The props argument is required — a zero-argument call must not typecheck,
+// even for a no-generic page (Next itself always supplies the props object).
+type PagePropsAreRequired = Expect<IsEqual<Parameters<typeof Page>["length"], 1>>;
+
+const BarePage = pagePipe().handle(async () => "bare");
+type BarePagePropsAreRequired = Expect<IsEqual<Parameters<typeof BarePage>["length"], 1>>;
+
+export { Page, BarePage };
