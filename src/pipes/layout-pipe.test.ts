@@ -8,6 +8,20 @@ test("passes the handler's ReactNode through unchanged", async () => {
   await expect(handler({ children: "the child tree" })).resolves.toBe("the child tree");
 });
 
+test("composes middlewares without a generic argument", async () => {
+  class ThemeMiddleware extends BeforeMiddleware {
+    async before() {
+      return next({ theme: "dark" });
+    }
+  }
+
+  const handler = layoutPipe()
+    .use(ThemeMiddleware)
+    .handle(async ({ theme, children }) => `${theme}: ${String(children)}`);
+
+  await expect(handler({ children: "child" })).resolves.toBe("dark: child");
+});
+
 test("threads typed children, params, and slots into the handler", async () => {
   type Props = {
     children: React.ReactNode;

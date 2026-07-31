@@ -40,7 +40,14 @@ import type {
   BodyOf,
   ResponseOf,
 } from "@flefebvre/next-pipe/client";
-import { routePipe, pagePipe, actionPipe, formActionPipe } from "@flefebvre/next-pipe/pipes";
+import {
+  routePipe,
+  pagePipe,
+  layoutPipe,
+  templatePipe,
+  actionPipe,
+  formActionPipe,
+} from "@flefebvre/next-pipe/pipes";
 import {
   Middleware,
   BeforeMiddleware,
@@ -74,6 +81,8 @@ export {
   useApiCall,
   routePipe,
   pagePipe,
+  layoutPipe,
+  templatePipe,
   actionPipe,
   formActionPipe,
   Middleware,

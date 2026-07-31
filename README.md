@@ -11,7 +11,7 @@ A typed, onion-model middleware system for Next.js route handlers, server action
 
 ## Why
 
-The Next.js App Router gives you four server entry points — route handlers, server actions, form actions, and pages — and no middleware system for any of them. So every file re-implements the same prologue by hand: check the session, parse and validate the input, load the entity or 404, shape the error response. next-pipe replaces that with one onion-model middleware system that works identically across all four surfaces, on top of the native Next.js primitives (your `route.ts` stays a plain HTTP endpoint, your actions stay server actions). Because middlewares are typed end to end — including their short-circuit responses — a generated client can read back the *exact* response union of every route.
+The Next.js App Router gives you a handful of server entry points — route handlers, server actions, form actions, pages, layouts, and templates — and no middleware system for any of them. So every file re-implements the same prologue by hand: check the session, parse and validate the input, load the entity or 404, shape the error response. next-pipe replaces that with one onion-model middleware system that works identically across all of these surfaces, on top of the native Next.js primitives (your `route.ts` stays a plain HTTP endpoint, your actions stay server actions). Because middlewares are typed end to end — including their short-circuit responses — a generated client can read back the *exact* response union of every route.
 
 ```ts
 export const POST = routePipe<RouteContext<"/api/notes/[id]/like">>()
