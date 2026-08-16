@@ -69,7 +69,7 @@ const res = await callRoute(routes.api.notes(id).like.POST(), { json: { like: tr
 if (res.status === 200) res.json.liked; // narrowed by status
 ```
 
-In the barrel, static segments are properties, dynamic segments are calls (`notes(id)`), verbs are zero-arg builders named after the verb verbatim (`.POST()`, not `.post()`; `definition.method` is `"POST"`).
+In the barrel, static segments are properties, dynamic segments are calls (`notes(id)`), verbs are zero-arg builders named after the verb verbatim (`.POST()`; `definition.method` is `"POST"`).
 
 `callRoute` semantics:
 

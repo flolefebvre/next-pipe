@@ -7,7 +7,7 @@ A typed, onion-model middleware system for Next.js route handlers, server action
 
 **Requires** Next.js ≥ 16 (App Router), React ≥ 19, TypeScript ≥ 5, Node ≥ 22. `zod` v4 is an optional peer dependency, needed only by the validation middlewares.
 
-> Early release (0.x): the API is still settling and minor versions may contain breaking changes.
+> Follows semver: breaking changes only land in major versions — see [Migrating](docs/migrating.md) when upgrading across one.
 
 ## Why
 
@@ -119,8 +119,6 @@ if (res.status === 200) {
 ```
 
 `callRoute` requires `json` (and `query`) exactly when the route declares them, and returns the union of everything the route can answer — handler returns *and* middleware interrupts. In client components, `useApiCall(builder)` wraps this with `useTransition` pending state — see [Client & hooks](docs/client.md).
-
-> **Upgrading from 0.x?** Generated builders and barrel members are now the uppercase verb (`.POST()`, not `.post()`) and `definition.method` is uppercase — see [Migrating](docs/migrating.md).
 
 ## Package map
 

@@ -102,6 +102,6 @@ next-pipe gen [options]
 
 ## See also
 
-- [Migrating](migrating.md#0x--100) — upgrading from 0.x: builders are now the uppercase verb
+- [Migrating](migrating.md) — upgrade notes when moving across a major version
 - [Client & hooks](client.md) — `defineRoute`, `callRoute`, and `useApiCall`, which consume the generated builders
 - [routePipe](route-pipe.md#the-response-union) — where the response union comes from

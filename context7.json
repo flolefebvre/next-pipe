@@ -16,11 +16,11 @@
     "A middleware is a class extending BeforeMiddleware, AfterMiddleware or Middleware. before() returns next({ ... }) to merge typed values into the handler input, or interrupt(value) to short-circuit. after() runs in reverse order.",
     "A middleware declares its dependency on an earlier one by typing its before() parameter, e.g. before(arg: { user: SafeUser }). Composing it too early is then a compile error rather than a runtime bug.",
     "Re-run codegen (`next-pipe gen`) after adding, removing or moving routes, verbs or path params. Body and query type changes flow through `import type` automatically and need no re-run.",
-    "Generated builders and barrel members carry the verb verbatim, uppercase: routes.api.notes(id).like.POST(), not .post(). Before 1.0.0 they were lowercased.",
+    "Generated builders and barrel members carry the verb verbatim, uppercase: routes.api.notes(id).like.POST(); definition.method is "POST".",
     "Client code imports only from @flefebvre/next-pipe/client and the generated routes barrel, never from /server, /pipes or middleware files.",
     "zod is an optional peer dependency, needed only by the validation middlewares and by actionPipe(schema)/formActionPipe(schema). The schemaless actionPipe()/formActionPipe() work without it.",
     "Requires Next.js >= 16 (App Router), React >= 19, TypeScript >= 5 and Node >= 22. RouteContext, PageProps and LayoutProps are Next.js-generated globals and need no import.",
-    "This package follows semver from 1.0.0 on: breaking changes only in major versions. If a snippet does not typecheck, trust the installed package's .d.ts in node_modules over the docs."
+    "This package follows semver: breaking changes only in major versions. If a snippet does not typecheck, trust the installed package's .d.ts in node_modules over the docs."
   ],
   "previousVersions": [{ "tag": "v0.1.0" }, { "tag": "v0.2.0" }]
 }
