@@ -136,3 +136,17 @@ test("a static segment named `get` does not collide with the parent's GET verb",
   expect(out).toContain("get: {");
   expect(out).toMatch(/GET: \(\) => _r\d\.GET\(\)/);
 });
+
+test("root route imports the `_root` module, never the barrel itself", () => {
+  // `app/route.ts` has an empty relDir; a bare `"./"` import would resolve to
+  // `index.ts` — the barrel — and every root builder would be `undefined`.
+  const out = buildBarrel([
+    { relDir: "", verbs: ["GET"], params: [] },
+    { relDir: "api/health", verbs: ["GET"], params: [] },
+  ]);
+
+  expect(out).toContain(`import * as _r0 from "./_root";`);
+  expect(out).not.toContain(`from "./";`);
+  expect(out).toContain("GET: () => _r0.GET()");
+  expect(out).toContain(`import * as _r1 from "./api/health";`);
+});

@@ -18,6 +18,16 @@ type TrieNode = {
 
 const emptyNode = (): TrieNode => ({ staticChildren: new Map() });
 
+/**
+ * File name (sans extension) of the root route's generated module. `index.ts`
+ * is the barrel, so `app/route.ts` cannot mirror its (empty) `relDir` — a
+ * bare `"./"` import would resolve to the barrel itself.
+ */
+const ROOT_MODULE = "_root";
+
+/** The generated module a route file is written to, relative to `outDir`, without extension. */
+export const moduleName = (relDir: string): string => relDir || ROOT_MODULE;
+
 const VALID_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const key = (name: string): string => (VALID_IDENTIFIER.test(name) ? name : JSON.stringify(name));
 const pad = (level: number): string => "  ".repeat(level);
@@ -35,7 +45,7 @@ export function buildBarrel(routes: RouteMeta[]): string {
   const imports: string[] = [];
 
   sorted.forEach((route, moduleIndex) => {
-    imports.push(`import * as _r${moduleIndex} from "./${route.relDir}";`);
+    imports.push(`import * as _r${moduleIndex} from "./${moduleName(route.relDir)}";`);
 
     let node = root;
     for (const segment of parseSegments(route.relDir)) {

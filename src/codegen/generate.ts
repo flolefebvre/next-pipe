@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import ts from "typescript";
 import { analyzeModule, buildProgram, parseTsconfig } from "./analyze-routes.js";
-import { buildBarrel, type RouteMeta } from "./build-barrel.js";
+import { buildBarrel, moduleName, type RouteMeta } from "./build-barrel.js";
 import { resolveRoutePath } from "./resolve-route-path.js";
 
 const COMMAND = "next-pipe gen";
@@ -116,9 +116,7 @@ export function generate(opts: GenerateOptions): number {
     const verbNames = usable.map((v) => v.name);
 
     // `index.ts` is reserved for the barrel, so the root route module uses `_root.ts`.
-    const targetPath = relDir
-      ? join(opts.outDir, ...relDir.split(posix.sep)) + ".ts"
-      : join(opts.outDir, "_root.ts");
+    const targetPath = join(opts.outDir, ...moduleName(relDir).split(posix.sep)) + ".ts";
     mkdirSync(dirname(targetPath), { recursive: true });
     writeFileSync(targetPath, generateModule(opts, relDir, verbNames));
     metas.push({
