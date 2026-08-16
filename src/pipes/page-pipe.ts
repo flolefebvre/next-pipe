@@ -13,9 +13,7 @@ type PagePropsShape = {
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 function pagePipe<Props extends PagePropsShape = {}>() {
-  // The props argument is optional so no-props pages stay callable with no
-  // arguments; Next itself always supplies it.
-  return new Pipe(entry((props?: Props) => ({ ...props }) as Props)).use(
+  return new Pipe(entry((props: Props) => ({ ...props }))).use(
     OutputTypeMiddleware<React.ReactNode>,
   );
 }
