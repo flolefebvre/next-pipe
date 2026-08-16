@@ -29,8 +29,8 @@ For `app/api/notes/[id]/like/route.ts`:
 import { defineRoute } from "@flefebvre/next-pipe/client";
 import type { GET as _GET, POST as _POST } from "@/app/api/notes/[id]/like/route";
 
-export const get = defineRoute<typeof _GET, { id: string }>(({ id }) => `/api/notes/${id}/like`, "get");
-export const post = defineRoute<typeof _POST, { id: string }>(({ id }) => `/api/notes/${id}/like`, "post");
+export const GET = defineRoute<typeof _GET, { id: string }>(({ id }) => `/api/notes/${id}/like`, "GET");
+export const POST = defineRoute<typeof _POST, { id: string }>(({ id }) => `/api/notes/${id}/like`, "POST");
 ```
 
 Plus a browse-by-autocomplete barrel where static segments are properties, dynamic segments are calls, and verbs are zero-arg builders:
@@ -41,8 +41,8 @@ export const routes = {
   api: {
     notes: (id: string) => ({
       like: {
-        get: () => _r0.get({ id }),
-        post: () => _r0.post({ id }),
+        GET: () => _r0.GET({ id }),
+        POST: () => _r0.POST({ id }),
       },
     }),
   },
@@ -50,8 +50,10 @@ export const routes = {
 ```
 
 ```ts
-routes.api.notes(id).like.post(); // → { url: "/api/notes/<id>/like", method: "post" } + phantom types
+routes.api.notes(id).like.POST(); // → { url: "/api/notes/<id>/like", method: "POST" } + phantom types
 ```
+
+Builders and barrel members carry the verb **verbatim** — `GET`, `POST`, `DELETE` — the same spelling as the handler you exported from `route.ts`, and the same string sent as the HTTP method.
 
 The root route (if any) is emitted as `_root.ts` since `index.ts` is reserved for the barrel.
 
@@ -100,5 +102,6 @@ next-pipe gen [options]
 
 ## See also
 
+- [Migrating](migrating.md) — upgrade notes when moving across a major version
 - [Client & hooks](client.md) — `defineRoute`, `callRoute`, and `useApiCall`, which consume the generated builders
 - [routePipe](route-pipe.md#the-response-union) — where the response union comes from

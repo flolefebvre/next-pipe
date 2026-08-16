@@ -7,7 +7,7 @@ description: Write Next.js server code with next-pipe (@flefebvre/next-pipe). Us
 
 next-pipe (`@flefebvre/next-pipe`) is a typed, onion-model middleware system for the Next.js App Router server entry points — route handlers, server actions, form actions, pages, layouts, and templates — plus a generated, fully typed client for routes.
 
-> This skill documents **v0.2.0**. If the installed `@flefebvre/next-pipe` version differs, or a snippet from this skill doesn't typecheck, trust the package's `.d.ts` in `node_modules` over this text.
+> This skill documents **v1.0.0**. If the installed `@flefebvre/next-pipe` version differs, or a snippet from this skill doesn't typecheck, trust the package's `.d.ts` in `node_modules` over this text.
 
 ## The onion
 

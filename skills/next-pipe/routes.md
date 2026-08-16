@@ -61,7 +61,7 @@ pnpm gen   # or: npx next-pipe gen
 import { callRoute } from "@flefebvre/next-pipe/client";
 import { routes } from "@/generated/routes";
 
-const res = await callRoute(routes.api.notes(id).like.post(), { json: { like: true } });
+const res = await callRoute(routes.api.notes(id).like.POST(), { json: { like: true } });
 // res: { status: 200; json: { liked: boolean } }
 //    | { status: 401; json: { error: string } }
 //    | { status: 400; json: … }
@@ -69,7 +69,7 @@ const res = await callRoute(routes.api.notes(id).like.post(), { json: { like: tr
 if (res.status === 200) res.json.liked; // narrowed by status
 ```
 
-In the barrel, static segments are properties, dynamic segments are calls (`notes(id)`), verbs are zero-arg builders.
+In the barrel, static segments are properties, dynamic segments are calls (`notes(id)`), verbs are zero-arg builders named after the verb verbatim (`.POST()`; `definition.method` is `"POST"`).
 
 `callRoute` semantics:
 
@@ -85,7 +85,7 @@ In client components, wrap with the hook:
 import { useApiCall } from "@flefebvre/next-pipe/client";
 import { routes } from "@/generated/routes";
 
-const [toggleLike, isLiking] = useApiCall(() => routes.api.notes(props.id).like.post(), {
+const [toggleLike, isLiking] = useApiCall(() => routes.api.notes(props.id).like.POST(), {
   onSuccess: (res) => {
     switch (res.status) {
       case 200: setLiked(res.json.liked); break;

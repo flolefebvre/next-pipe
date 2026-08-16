@@ -77,8 +77,7 @@ function emitNode(node: TrieNode, level: number): string {
     const { moduleIndex, verbs, params } = node.route;
     const arg = params.length ? `{ ${params.map((p) => p.name).join(", ")} }` : "";
     for (const verb of [...verbs].sort()) {
-      const lower = verb.toLowerCase();
-      members.push(`${lower}: () => _r${moduleIndex}.${lower}(${arg})`);
+      members.push(`${verb}: () => _r${moduleIndex}.${verb}(${arg})`);
     }
   }
 

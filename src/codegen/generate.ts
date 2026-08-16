@@ -61,9 +61,8 @@ function generateModule(opts: GenerateOptions, relDir: string, verbs: string[]):
   ];
 
   for (const verb of verbs) {
-    const lower = verb.toLowerCase();
     const typeArgs = paramsType ? `<typeof _${verb}, ${paramsType}>` : `<typeof _${verb}>`;
-    lines.push(`export const ${lower} = defineRoute${typeArgs}(${urlFn}, "${lower}");`);
+    lines.push(`export const ${verb} = defineRoute${typeArgs}(${urlFn}, "${verb}");`);
   }
   lines.push(``);
 

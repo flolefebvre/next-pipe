@@ -7,7 +7,7 @@ A typed, onion-model middleware system for Next.js route handlers, server action
 
 **Requires** Next.js ≥ 16 (App Router), React ≥ 19, TypeScript ≥ 5, Node ≥ 22. `zod` v4 is an optional peer dependency, needed only by the validation middlewares.
 
-> Early release (0.x): the API is still settling and minor versions may contain breaking changes.
+> Follows semver: breaking changes only land in major versions — see [Migrating](docs/migrating.md) when upgrading across one.
 
 ## Why
 
@@ -108,7 +108,7 @@ The generator walks your `app/` directory with the TypeScript type checker and e
 import { callRoute } from "@flefebvre/next-pipe/client";
 import { routes } from "@/generated/routes";
 
-const res = await callRoute(routes.api.notes(id).like.post(), { json: { like: true } });
+const res = await callRoute(routes.api.notes(id).like.POST(), { json: { like: true } });
 // res: { status: 200; json: { liked: boolean } }
 //    | { status: 401; json: { error: string } }
 //    | { status: 400; json: … }  ← schema failure, with typed field errors
@@ -145,6 +145,7 @@ if (res.status === 200) {
 - **[Built-in middlewares](docs/built-in-middlewares.md)** — body, querystring, input and form validation; response shaping; output typing.
 - **[Write your own middleware](docs/custom-middlewares.md)** — `BeforeMiddleware`, `AfterMiddleware`, parametrized constructors (`.use(M, ...args)`), interrupts, and the `config` type channel that feeds the generated client.
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
+- **[Migrating](docs/migrating.md)** — version-to-version upgrade notes; only needed when bumping across a breaking change.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.
 
 ## Agent skill

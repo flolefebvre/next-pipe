@@ -1,4 +1,6 @@
+import ts from "typescript";
 import { expect, test } from "vitest";
+import { VERBS } from "./analyze-routes.js";
 import { buildBarrel } from "./build-barrel.js";
 
 const req = (name: string, type: "string" | "string[]" = "string", optional = false) => ({
@@ -20,14 +22,14 @@ test("dynamic segment becomes a positional call, verbs are zero-arg builders", (
   expect(out).toContain("api: {");
   expect(out).toContain("posts: (id: string) => ({");
   expect(out).toContain("like: {");
-  expect(out).toContain("get: () => _r0.get({ id })");
-  expect(out).toContain("post: () => _r0.post({ id })");
+  expect(out).toContain("GET: () => _r0.GET({ id })");
+  expect(out).toContain("POST: () => _r0.POST({ id })");
 });
 
 test("static-only route: verb called with no params", () => {
   const out = buildBarrel([{ relDir: "tests/route", verbs: ["GET"], params: [] }]);
 
-  expect(out).toContain("get: () => _r0.get()");
+  expect(out).toContain("GET: () => _r0.GET()");
 });
 
 test("catch-all segment becomes a positional string[] call", () => {
@@ -40,7 +42,7 @@ test("catch-all segment becomes a positional string[] call", () => {
   ]);
 
   expect(out).toContain("(slug: string[]) => ({");
-  expect(out).toContain("get: () => _r0.get({ slug })");
+  expect(out).toContain("GET: () => _r0.GET({ slug })");
 });
 
 test("optional catch-all segment becomes an optional positional string[] call", () => {
@@ -53,7 +55,7 @@ test("optional catch-all segment becomes an optional positional string[] call", 
   ]);
 
   expect(out).toContain("(slug?: string[]) => ({");
-  expect(out).toContain("get: () => _r0.get({ slug })");
+  expect(out).toContain("GET: () => _r0.GET({ slug })");
 });
 
 test("route groups are stripped from the barrel tree (but kept in the import path)", () => {
@@ -76,8 +78,8 @@ test("a node that is both callable and has verbs uses Object.assign", () => {
 
   // `posts` lists likes itself (GET) and is callable to descend into [id].
   expect(out).toContain("posts: Object.assign((id: string) => ({");
-  expect(out).toMatch(/get: \(\) => _r\d\.get\(\{ id \}\)/); // [id] leaf
-  expect(out).toMatch(/get: \(\) => _r\d\.get\(\)/); // posts leaf
+  expect(out).toMatch(/GET: \(\) => _r\d\.GET\(\{ id \}\)/); // [id] leaf
+  expect(out).toMatch(/GET: \(\) => _r\d\.GET\(\)/); // posts leaf
 });
 
 test("a segment that is not a valid identifier is quoted as a string key", () => {
@@ -109,5 +111,28 @@ test("multiple dynamic segments chain as nested calls", () => {
 
   expect(out).toContain("(org: string) => ({");
   expect(out).toContain("(repo: string) => ({");
-  expect(out).toContain("get: () => _r0.get({ org, repo })");
+  expect(out).toContain("GET: () => _r0.GET({ org, repo })");
+});
+
+test.each(VERBS)("a barrel holding a %s route is syntactically valid TypeScript", (verb) => {
+  const out = buildBarrel([{ relDir: "api/thing", verbs: [verb], params: [] }]);
+
+  const { diagnostics = [] } = ts.transpileModule(out, {
+    fileName: "index.ts",
+    reportDiagnostics: true,
+    compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext },
+  });
+
+  expect(diagnostics.map((d) => ts.flattenDiagnosticMessageText(d.messageText, " "))).toEqual([]);
+});
+
+test("a static segment named `get` does not collide with the parent's GET verb", () => {
+  const out = buildBarrel([
+    { relDir: "api", verbs: ["GET"], params: [] },
+    { relDir: "api/get", verbs: ["GET"], params: [] },
+  ]);
+
+  // `get` is the child node, `GET` the verb builder: two distinct keys.
+  expect(out).toContain("get: {");
+  expect(out).toMatch(/GET: \(\) => _r\d\.GET\(\)/);
 });
