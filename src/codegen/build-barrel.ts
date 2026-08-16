@@ -19,9 +19,10 @@ type TrieNode = {
 const emptyNode = (): TrieNode => ({ staticChildren: new Map() });
 
 /**
- * File name (sans extension) of the root route's generated module. `index.ts`
- * is the barrel, so `app/route.ts` cannot mirror its (empty) `relDir` — a
- * bare `"./"` import would resolve to the barrel itself.
+ * Name of the root route's generated module, without the `.ts` extension
+ * (`generate.ts` appends it for the file path; the barrel imports it bare).
+ * `index.ts` is the barrel, so `app/route.ts` cannot mirror its (empty)
+ * `relDir` — a bare `"./"` import would resolve to the barrel itself.
  */
 const ROOT_MODULE = "_root";
 
