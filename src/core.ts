@@ -277,11 +277,15 @@ function error<TKey extends string, TData>(
   data: TData,
 ): { status: "error"; error: { type: TKey; data: TData } };
 
-function error<TKeyOrData, TData>(keyOrValue: TKeyOrData, data?: TData) {
-  if (data !== undefined) {
-    return { status: "error" as const, error: { type: keyOrValue, data } };
+function error(...args: [value: unknown] | [key: string, data: unknown]) {
+  // Discriminate on arity, not on `data !== undefined`: `error("key", undefined)`
+  // is the two-argument (keyed) form and must yield `{ type, data: undefined }`,
+  // as its overload declares — not the bare-value shape.
+  if (args.length === 2) {
+    const [type, data] = args;
+    return { status: "error" as const, error: { type, data } };
   }
-  return { status: "error" as const, error: keyOrValue };
+  return { status: "error" as const, error: args[0] };
 }
 
 type ActionSuccess<T = unknown> = { status: "success"; data: T };
