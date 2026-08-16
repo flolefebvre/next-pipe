@@ -674,6 +674,17 @@ test("single-argument error wraps the value as the error payload", () => {
   expect(error({ code: 42 })).toStrictEqual({ status: "error", error: { code: 42 } });
 });
 
+test("keyed error with an undefined payload keeps the keyed shape its type declares", () => {
+  const e = error("unauthorized", undefined);
+  type TEST = Expect<
+    IsEqual<typeof e, { status: "error"; error: { type: "unauthorized"; data: undefined } }>
+  >;
+
+  // Arity, not `data !== undefined`, picks the form — otherwise this degraded
+  // to `{ error: "unauthorized" }` at runtime while the type said `{ type, data }`.
+  expect(e).toStrictEqual({ status: "error", error: { type: "unauthorized", data: undefined } });
+});
+
 /**
  * `merge`'s body is an assertion, so its declared type holds whatever the body
  * does — only the runtime expectation below can catch a reversed spread.

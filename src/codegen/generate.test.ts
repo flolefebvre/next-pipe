@@ -80,6 +80,16 @@ test("the generated barrel parses as TypeScript with no syntax errors", () => {
   expect(syntaxErrors(read("index.ts"), "index.ts")).toEqual([]);
 });
 
-test("one module per verb route is generated and imported by the barrel", () => {
-  expect(read("index.ts").match(/^import \* as _r\d+ from/gm)).toHaveLength(VERBS.length);
+test("one module per route is generated and imported by the barrel", () => {
+  // One per verb route, plus the root route.
+  expect(read("index.ts").match(/^import \* as _r\d+ from/gm)).toHaveLength(VERBS.length + 1);
+});
+
+test("the root route lands in `_root.ts` and the barrel imports it from there", () => {
+  expect(read("_root.ts")).toContain(
+    `export const GET = defineRoute<typeof _GET>(() => \`/\`, "GET");`,
+  );
+  const barrel = read("index.ts");
+  expect(barrel).toContain(`from "./_root";`);
+  expect(barrel).not.toContain(`from "./";`);
 });
