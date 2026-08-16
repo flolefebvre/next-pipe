@@ -108,7 +108,7 @@ The generator walks your `app/` directory with the TypeScript type checker and e
 import { callRoute } from "@flefebvre/next-pipe/client";
 import { routes } from "@/generated/routes";
 
-const res = await callRoute(routes.api.notes(id).like.post(), { json: { like: true } });
+const res = await callRoute(routes.api.notes(id).like.POST(), { json: { like: true } });
 // res: { status: 200; json: { liked: boolean } }
 //    | { status: 401; json: { error: string } }
 //    | { status: 400; json: … }  ← schema failure, with typed field errors
@@ -119,6 +119,8 @@ if (res.status === 200) {
 ```
 
 `callRoute` requires `json` (and `query`) exactly when the route declares them, and returns the union of everything the route can answer — handler returns *and* middleware interrupts. In client components, `useApiCall(builder)` wraps this with `useTransition` pending state — see [Client & hooks](docs/client.md).
+
+> **Upgrading from 0.x?** Generated builders and barrel members are now the uppercase verb (`.POST()`, not `.post()`) and `definition.method` is uppercase — see [Breaking changes in 1.0.0](docs/codegen.md#breaking-changes-in-100).
 
 ## Package map
 

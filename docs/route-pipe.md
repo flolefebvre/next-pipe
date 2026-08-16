@@ -51,7 +51,7 @@ A route's response type is the union of everything it can answer:
 This union is the route's *contract*. [`next-pipe gen`](codegen.md) extracts it and the [generated client](client.md) returns exactly that union from `callRoute` — no `any`, no hand-written response types:
 
 ```ts
-const res = await callRoute(routes.api.notes(id).like.post(), { json: { like: true } });
+const res = await callRoute(routes.api.notes(id).like.POST(), { json: { like: true } });
 // res: { status: 200; json: { liked: boolean } }
 //    | { status: 401; json: { error: string } }
 //    | { status: 400; json: ... }

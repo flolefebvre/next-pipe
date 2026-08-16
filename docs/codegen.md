@@ -29,8 +29,8 @@ For `app/api/notes/[id]/like/route.ts`:
 import { defineRoute } from "@flefebvre/next-pipe/client";
 import type { GET as _GET, POST as _POST } from "@/app/api/notes/[id]/like/route";
 
-export const get = defineRoute<typeof _GET, { id: string }>(({ id }) => `/api/notes/${id}/like`, "get");
-export const post = defineRoute<typeof _POST, { id: string }>(({ id }) => `/api/notes/${id}/like`, "post");
+export const GET = defineRoute<typeof _GET, { id: string }>(({ id }) => `/api/notes/${id}/like`, "GET");
+export const POST = defineRoute<typeof _POST, { id: string }>(({ id }) => `/api/notes/${id}/like`, "POST");
 ```
 
 Plus a browse-by-autocomplete barrel where static segments are properties, dynamic segments are calls, and verbs are zero-arg builders:
@@ -41,8 +41,8 @@ export const routes = {
   api: {
     notes: (id: string) => ({
       like: {
-        get: () => _r0.get({ id }),
-        post: () => _r0.post({ id }),
+        GET: () => _r0.GET({ id }),
+        POST: () => _r0.POST({ id }),
       },
     }),
   },
@@ -50,8 +50,10 @@ export const routes = {
 ```
 
 ```ts
-routes.api.notes(id).like.post(); // → { url: "/api/notes/<id>/like", method: "post" } + phantom types
+routes.api.notes(id).like.POST(); // → { url: "/api/notes/<id>/like", method: "POST" } + phantom types
 ```
+
+Builders and barrel members carry the verb **verbatim** — `GET`, `POST`, `DELETE` — the same spelling as the handler you exported from `route.ts`, and the same string sent as the HTTP method.
 
 The root route (if any) is emitted as `_root.ts` since `index.ts` is reserved for the barrel.
 
@@ -97,6 +99,22 @@ next-pipe gen [options]
 - `⚠ <route>: GET has no response output type (missing ResponseMiddleware) — skipped.` — the verb isn't built with `routePipe()` (or a custom pipe ending in `ResponseMiddleware`), so there's no response union to expose.
 - `⚠ <route>: no verb exports found — skipped.` — the file exports none of the seven HTTP verbs.
 - `⚠ <route>: not part of the TypeScript program — skipped.` — the file isn't covered by the tsconfig's `include`; fix the tsconfig or pass `--tsconfig`.
+
+## Breaking changes in 1.0.0
+
+Generated builders and barrel members are named after the verb **verbatim** (uppercase) instead of lowercased, and `definition.method` is the uppercase verb:
+
+```ts
+routes.api.notes(id).like.post(); // 0.x → { …, method: "post" }
+routes.api.notes(id).like.POST(); // 1.0 → { …, method: "POST" }
+```
+
+This fixes two defects that lowercasing caused:
+
+- **`DELETE`** — `delete` is a reserved word, so `export const delete = …` was a syntax error: any app with a `DELETE` route generated a file that did not compile.
+- **`PATCH`** — `fetch` normalizes `get`/`post`/`put`/`delete`/`head`/`options` to uppercase but **not** `patch`, so a generated PATCH builder sent `patch` and Next answered `405 Method Not Allowed`.
+
+To migrate: re-run `next-pipe gen` and let `tsc` flag the call sites — every renamed builder is a compile error, none is a silent behavior change. If you compare `definition.method` anywhere, compare against the uppercase verb.
 
 ## See also
 

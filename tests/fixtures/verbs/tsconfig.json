@@ -1,0 +1,7 @@
+{
+  // Program used by `generate()` in generate.test.ts: the root config excludes
+  // `tests/fixtures`, so the verb routes need a config that includes them.
+  "extends": "../../../tsconfig.json",
+  "include": ["app"],
+  "exclude": []
+}

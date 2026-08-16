@@ -60,10 +60,14 @@ function generateModule(opts: GenerateOptions, relDir: string, verbs: string[]):
     ``,
   ];
 
+  // The verb is emitted verbatim, as both the export name and the method
+  // literal: `DELETE` is a legal identifier where `delete` is a reserved word,
+  // and `fetch` only normalizes *some* lowercase methods (`patch` is sent as-is
+  // and Next answers 405). One spelling end to end, matching Next's own
+  // `export const GET`.
   for (const verb of verbs) {
-    const lower = verb.toLowerCase();
     const typeArgs = paramsType ? `<typeof _${verb}, ${paramsType}>` : `<typeof _${verb}>`;
-    lines.push(`export const ${lower} = defineRoute${typeArgs}(${urlFn}, "${lower}");`);
+    lines.push(`export const ${verb} = defineRoute${typeArgs}(${urlFn}, "${verb}");`);
   }
   lines.push(``);
 

@@ -76,9 +76,11 @@ function emitNode(node: TrieNode, level: number): string {
   if (node.route) {
     const { moduleIndex, verbs, params } = node.route;
     const arg = params.length ? `{ ${params.map((p) => p.name).join(", ")} }` : "";
+    // Verbatim verbs, matching the generated modules' export names. Uppercase
+    // also keeps a verb member from colliding with a lowercase static segment
+    // of the same name (`app/api/get/route.ts` next to a GET on `api`).
     for (const verb of [...verbs].sort()) {
-      const lower = verb.toLowerCase();
-      members.push(`${lower}: () => _r${moduleIndex}.${lower}(${arg})`);
+      members.push(`${verb}: () => _r${moduleIndex}.${verb}(${arg})`);
     }
   }
 
