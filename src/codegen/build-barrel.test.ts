@@ -126,7 +126,7 @@ test.each(VERBS)("a barrel holding a %s route is syntactically valid TypeScript"
   expect(diagnostics.map((d) => ts.flattenDiagnosticMessageText(d.messageText, " "))).toEqual([]);
 });
 
-test("a static segment named `get` no longer collides with the parent's GET verb", () => {
+test("a static segment named `get` does not collide with the parent's GET verb", () => {
   const out = buildBarrel([
     { relDir: "api", verbs: ["GET"], params: [] },
     { relDir: "api/get", verbs: ["GET"], params: [] },

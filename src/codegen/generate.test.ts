@@ -51,7 +51,7 @@ describe.each(VERBS)("generated module for %s", (verb) => {
   const file = `${verb.toLowerCase()}.ts`;
   const source = read(file);
 
-  // The regression guard: `export const delete = …` is a syntax error.
+  // Catches an export name that is not a valid identifier (e.g. a reserved word).
   test("parses as TypeScript with no syntax errors", () => {
     expect(syntaxErrors(source, file)).toEqual([]);
   });
