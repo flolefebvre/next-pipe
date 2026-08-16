@@ -120,7 +120,7 @@ if (res.status === 200) {
 
 `callRoute` requires `json` (and `query`) exactly when the route declares them, and returns the union of everything the route can answer — handler returns *and* middleware interrupts. In client components, `useApiCall(builder)` wraps this with `useTransition` pending state — see [Client & hooks](docs/client.md).
 
-> **Upgrading from 0.x?** Generated builders and barrel members are now the uppercase verb (`.POST()`, not `.post()`) and `definition.method` is uppercase — see [Breaking changes in 1.0.0](docs/codegen.md#breaking-changes-in-100).
+> **Upgrading from 0.x?** Generated builders and barrel members are now the uppercase verb (`.POST()`, not `.post()`) and `definition.method` is uppercase — see [Migrating](docs/migrating.md).
 
 ## Package map
 
@@ -147,6 +147,7 @@ if (res.status === 200) {
 - **[Built-in middlewares](docs/built-in-middlewares.md)** — body, querystring, input and form validation; response shaping; output typing.
 - **[Write your own middleware](docs/custom-middlewares.md)** — `BeforeMiddleware`, `AfterMiddleware`, parametrized constructors (`.use(M, ...args)`), interrupts, and the `config` type channel that feeds the generated client.
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
+- **[Migrating](docs/migrating.md)** — version-to-version upgrade notes; only needed when bumping across a breaking change.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.
 
 ## Agent skill

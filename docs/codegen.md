@@ -100,23 +100,8 @@ next-pipe gen [options]
 - `⚠ <route>: no verb exports found — skipped.` — the file exports none of the seven HTTP verbs.
 - `⚠ <route>: not part of the TypeScript program — skipped.` — the file isn't covered by the tsconfig's `include`; fix the tsconfig or pass `--tsconfig`.
 
-## Breaking changes in 1.0.0
-
-Generated builders and barrel members are named after the verb **verbatim** (uppercase) instead of lowercased, and `definition.method` is the uppercase verb:
-
-```ts
-routes.api.notes(id).like.post(); // 0.x → { …, method: "post" }
-routes.api.notes(id).like.POST(); // 1.0 → { …, method: "POST" }
-```
-
-This fixes two defects that lowercasing caused:
-
-- **`DELETE`** — `delete` is a reserved word, so `export const delete = …` was a syntax error: any app with a `DELETE` route generated a file that did not compile.
-- **`PATCH`** — `fetch` normalizes `get`/`post`/`put`/`delete`/`head`/`options` to uppercase but **not** `patch`, so a generated PATCH builder sent `patch` and Next answered `405 Method Not Allowed`.
-
-To migrate: re-run `next-pipe gen` and let `tsc` flag the call sites — every renamed builder is a compile error, none is a silent behavior change. If you compare `definition.method` anywhere, compare against the uppercase verb.
-
 ## See also
 
+- [Migrating](migrating.md#0x--100) — upgrading from 0.x: builders are now the uppercase verb
 - [Client & hooks](client.md) — `defineRoute`, `callRoute`, and `useApiCall`, which consume the generated builders
 - [routePipe](route-pipe.md#the-response-union) — where the response union comes from
