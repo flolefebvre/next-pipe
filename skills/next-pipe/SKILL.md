@@ -7,22 +7,22 @@ description: Write Next.js server code with next-pipe (@flefebvre/next-pipe). Us
 
 next-pipe (`@flefebvre/next-pipe`) is a typed, onion-model middleware system for the Next.js App Router server entry points — route handlers, server actions, form actions, pages, layouts, and templates — plus a generated, fully typed client for routes.
 
-> This skill documents **v1.0.0**. If the installed `@flefebvre/next-pipe` version differs, or a snippet from this skill doesn't typecheck, trust the package's `.d.ts` in `node_modules` over this text.
+> This skill documents **v1.0.0**.
 
 ## The onion
 
-A pipe is a chain of `.use(Middleware, ...args)` calls sealed with `.handle(fn)`. Each middleware's `before(input)` runs in `.use()` order and either returns `next({ ... })` — merging typed values into the handler's input — or `interrupt(value)` — skipping the handler; the value travels back out through the `after`s of *earlier* middlewares and **joins the pipe's output type** (routes: the response union; actions: the error union). `after(output)` runs in reverse order on the way out. A middleware depends on earlier ones by typing its `before` parameter (e.g. `before(arg: { user: SafeUser })`) — composing it too early is a compile error, not a runtime bug.
+A pipe is a chain of `.use(Middleware, ...args)` calls sealed with `.handle(fn)`. Each middleware's `before(input)` runs in `.use()` order and either returns `next({ ... })` — merging typed values into the handler's input — or `interrupt(value)` — skipping the handler; the value travels back out through the `after`s of _earlier_ middlewares and **joins the pipe's output type** (routes: the response union; actions: the error union). `after(output)` runs in reverse order on the way out. A middleware depends on earlier ones by typing its `before` parameter (e.g. `before(arg: { user: SafeUser })`) — composing it too early is a compile error, not a runtime bug.
 
 ## Which pipe for which surface
 
-| Surface | File | Pipe | Handler returns |
-| --- | --- | --- | --- |
-| Route handler | `app/**/route.ts` | `routePipe<RouteContext<"/path">>()` | `json(status, body)` |
-| Server action (called from code) | `"use server"` file | `actionPipe(schema?)` | `success(data?)` / `error(key, data)` |
-| Form action (`<form>` + `useActionState`) | `"use server"` file | `formActionPipe(schema?)` | `error(key, data)` or `redirect(...)` |
-| Page / server component | `app/**/page.tsx` | `pagePipe<PageProps<"/path">>()` | JSX (`React.ReactNode`) |
-| Layout | `app/**/layout.tsx` | `layoutPipe<LayoutProps<"/path">>()` | JSX (`React.ReactNode`) |
-| Template | `app/**/template.tsx` | `templatePipe()` | JSX (`React.ReactNode`) |
+| Surface                                   | File                  | Pipe                                 | Handler returns                       |
+| ----------------------------------------- | --------------------- | ------------------------------------ | ------------------------------------- |
+| Route handler                             | `app/**/route.ts`     | `routePipe<RouteContext<"/path">>()` | `json(status, body)`                  |
+| Server action (called from code)          | `"use server"` file   | `actionPipe(schema?)`                | `success(data?)` / `error(key, data)` |
+| Form action (`<form>` + `useActionState`) | `"use server"` file   | `formActionPipe(schema?)`            | `error(key, data)` or `redirect(...)` |
+| Page / server component                   | `app/**/page.tsx`     | `pagePipe<PageProps<"/path">>()`     | JSX (`React.ReactNode`)               |
+| Layout                                    | `app/**/layout.tsx`   | `layoutPipe<LayoutProps<"/path">>()` | JSX (`React.ReactNode`)               |
+| Template                                  | `app/**/template.tsx` | `templatePipe()`                     | JSX (`React.ReactNode`)               |
 
 `RouteContext`, `PageProps`, and `LayoutProps` are Next.js-generated globals — no import needed.
 
@@ -30,16 +30,16 @@ A pipe is a chain of `.use(Middleware, ...args)` calls sealed with `.handle(fn)`
 
 Subpath imports are strict — these are the only entry points:
 
-| Import from | Exports |
-| --- | --- |
-| `@flefebvre/next-pipe/pipes` | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe`, `layoutPipe`, `templatePipe` |
-| `@flefebvre/next-pipe/server` | `next`, `interrupt`, `success`, `error`, `json`, `Pipe`, `entry`, `createPipe`, `merge` |
-| `@flefebvre/next-pipe/client` | `callRoute`, `useApiCall`, `getActionError`, `getActionInput`, `defineRoute` |
-| `@flefebvre/next-pipe/middlewares` | `BeforeMiddleware`, `AfterMiddleware`, `Middleware`, `OutputTypeMiddleware`, `MiddlewareConfig` |
-| `@flefebvre/next-pipe/middlewares/routes` | `ResponseMiddleware`, `BodyValidationMiddleware`, `QuerystringMiddleware` |
-| `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` |
-| `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware` |
-| `@flefebvre/next-pipe/middlewares/pages` | `SearchParamsMiddleware` |
+| Import from                                     | Exports                                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `@flefebvre/next-pipe/pipes`                    | `routePipe`, `actionPipe`, `formActionPipe`, `pagePipe`, `layoutPipe`, `templatePipe`           |
+| `@flefebvre/next-pipe/server`                   | `next`, `interrupt`, `success`, `error`, `json`, `Pipe`, `entry`, `createPipe`, `merge`         |
+| `@flefebvre/next-pipe/client`                   | `callRoute`, `useApiCall`, `getActionError`, `getActionInput`, `defineRoute`                    |
+| `@flefebvre/next-pipe/middlewares`              | `BeforeMiddleware`, `AfterMiddleware`, `Middleware`, `OutputTypeMiddleware`, `MiddlewareConfig` |
+| `@flefebvre/next-pipe/middlewares/routes`       | `ResponseMiddleware`, `BodyValidationMiddleware`, `QuerystringMiddleware`                       |
+| `@flefebvre/next-pipe/middlewares/actions`      | `InputValidationMiddleware`                                                                     |
+| `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware`                                                                      |
+| `@flefebvre/next-pipe/middlewares/pages`        | `SearchParamsMiddleware`                                                                        |
 
 ## Iron rules
 
