@@ -1,10 +1,11 @@
-import { configDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // Agent worktrees under `.claude/worktrees/` are full checkouts of this
-    // repo: without this, their `src/**/*.test.ts` are collected alongside the
-    // real ones and a run reports another branch's failures as this one's.
-    exclude: [...configDefaults.exclude, ".claude/**"],
+    // Every test lives under `src/` (the build and the linter are scoped the
+    // same way). Scanning only there also keeps agent worktrees under
+    // `.claude/worktrees/`, which are full checkouts of this repo, from being
+    // collected as this repo's tests.
+    dir: "src",
   },
 });
