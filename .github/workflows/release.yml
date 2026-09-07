@@ -58,7 +58,7 @@ jobs:
           "
 
   # The everyday gate, unmodified: typecheck, lint, test, typecheck:dist (which builds and
-  # checks the shipped .d.ts from a consumer's point of view), and fallow.
+  # checks the shipped .d.ts from a consumer's point of view), and dupes (jscpd).
   ci:
     name: ci
     needs: guard

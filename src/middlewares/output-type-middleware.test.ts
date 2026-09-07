@@ -12,20 +12,24 @@ import {
 import type { Expect } from "../../tests/helpers.js";
 import type { IsEqual } from "type-fest";
 
-test("SucessOrError", async function () {
-  const pipe = new Pipe(OutputTypeMiddleware<ActionResult>);
-  const handle = pipe.handle(async () => success("value"));
+/** What both roots below must infer for a handler returning `success("value")`. */
+type SuccessString = () => Promise<{ status: "success"; data: string }>;
+const successValue = async () => success("value");
+const expectSuccessValue = (handle: () => Promise<unknown>) =>
+  expect(handle()).resolves.toStrictEqual(success("value"));
 
-  await expect(handle()).resolves.toStrictEqual(success("value"));
-  type TEST = Expect<IsEqual<typeof handle, () => Promise<{ status: "success"; data: string }>>>;
+test("SucessOrError", async function () {
+  const handle = new Pipe(OutputTypeMiddleware<ActionResult>).handle(successValue);
+
+  await expectSuccessValue(handle);
+  type TEST = Expect<IsEqual<typeof handle, SuccessString>>;
 });
 
 test("Passthrough + use SucessOrError", async function () {
-  const pipe = new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>);
-  const handle = pipe.handle(async () => success("value"));
+  const handle = new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>).handle(successValue);
 
-  await expect(handle()).resolves.toStrictEqual(success("value"));
-  type TEST = Expect<IsEqual<typeof handle, () => Promise<{ status: "success"; data: string }>>>;
+  await expectSuccessValue(handle);
+  type TEST = Expect<IsEqual<typeof handle, SuccessString>>;
 });
 
 test("Middleware transforms string into success", async function () {

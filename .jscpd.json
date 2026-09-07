@@ -1,0 +1,7 @@
+{
+  "path": ["src", "tests", "scripts"],
+  "threshold": 0,
+  "reporters": ["console"],
+  "format": ["typescript", "tsx", "javascript"],
+  "ignore": ["**/node_modules/**", "**/dist/**", "tests/dist-consumer/**"]
+}

@@ -1,5 +1,9 @@
 import { expect, test } from "vitest";
-import { BeforeMiddleware, next } from "../core.js";
+import {
+  expectThemedRender,
+  LoadEntityMiddleware,
+  ThemeMiddleware,
+} from "../../tests/unit-fixtures.js";
 import { layoutPipe } from "./layout-pipe.js";
 
 test("passes the handler's ReactNode through unchanged", async () => {
@@ -9,17 +13,11 @@ test("passes the handler's ReactNode through unchanged", async () => {
 });
 
 test("composes middlewares without a generic argument", async () => {
-  class ThemeMiddleware extends BeforeMiddleware {
-    async before() {
-      return next({ theme: "dark" });
-    }
-  }
-
   const handler = layoutPipe()
     .use(ThemeMiddleware)
     .handle(async ({ theme, children }) => `${theme}: ${String(children)}`);
 
-  await expect(handler({ children: "child" })).resolves.toBe("dark: child");
+  await expectThemedRender(handler);
 });
 
 test("threads typed children, params, and slots into the handler", async () => {
@@ -46,15 +44,8 @@ test("threads typed children, params, and slots into the handler", async () => {
 test("middlewares can depend on layout params", async () => {
   type Props = { children: React.ReactNode; params: Promise<{ id: string }> };
 
-  class LoadMiddleware extends BeforeMiddleware {
-    async before(arg: { params: Promise<{ id: string }> }) {
-      const { id } = await arg.params;
-      return next({ entity: `entity-${id}` });
-    }
-  }
-
   const handler = layoutPipe<Props>()
-    .use(LoadMiddleware)
+    .use(LoadEntityMiddleware)
     .handle(async ({ entity, children }) => `${entity} wraps ${String(children)}`);
 
   await expect(handler({ children: "child", params: Promise.resolve({ id: "7" }) })).resolves.toBe(

@@ -1,7 +1,0 @@
-{
-  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
-  // tests/dist-consumer is a consumer of the *built* package, compiled by
-  // `pnpm typecheck:dist` against its own tsconfig. It is deliberately
-  // unreachable from the source graph, so it is not dead code.
-  "ignorePatterns": ["tests/dist-consumer/**"]
-}

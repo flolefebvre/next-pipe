@@ -76,8 +76,8 @@
     "format": "pnpm exec prettier -w src && echo 'FORMAT OK'",
     "test": "vitest --run && echo 'TEST OK'",
     "lint": "eslint --max-warnings 0 && echo 'LINT OK'",
-    "fallow":"fallow --only dead-code,dupes && echo 'FALLOW OK'",
-    "gate": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run typecheck:dist && pnpm fallow"
+    "dupes": "jscpd && echo 'DUPES OK'",
+    "gate": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run typecheck:dist && pnpm run dupes"
   },
   "peerDependencies": {
     "next": ">=16.0.0",
@@ -95,7 +95,7 @@
     "@types/react": "^19.2.17",
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.6.0",
-    "fallow": "^2.103.0",
+    "jscpd": "^5.1.2",
     "next": "^16.0.0",
     "prettier": "^3.9.0",
     "react": "^19.2.7",

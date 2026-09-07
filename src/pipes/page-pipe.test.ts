@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { BeforeMiddleware, next } from "../core.js";
+import { LoadEntityMiddleware } from "../../tests/unit-fixtures.js";
 import { pagePipe } from "./page-pipe.js";
 
 test("passes the handler's ReactNode through unchanged", async () => {
@@ -31,15 +31,8 @@ test("threads typed params and searchParams into the handler", async () => {
 test("middlewares can depend on page params", async () => {
   type Props = { params: Promise<{ id: string }> };
 
-  class LoadMiddleware extends BeforeMiddleware {
-    async before(arg: { params: Promise<{ id: string }> }) {
-      const { id } = await arg.params;
-      return next({ entity: `entity-${id}` });
-    }
-  }
-
   const handler = pagePipe<Props>()
-    .use(LoadMiddleware)
+    .use(LoadEntityMiddleware)
     .handle(async ({ entity }) => entity);
 
   await expect(handler({ params: Promise.resolve({ id: "7" }) })).resolves.toBe("entity-7");

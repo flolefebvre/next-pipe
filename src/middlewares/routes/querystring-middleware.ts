@@ -1,4 +1,5 @@
-import { BeforeMiddleware, error, interrupt, next, type MiddlewareConfig } from "../../core.js";
+import { BeforeMiddleware, next, type MiddlewareConfig } from "../../core.js";
+import { validateSchema } from "./validate-schema.js";
 import * as z from "zod";
 
 export class QuerystringMiddleware<TSchema extends z.ZodObject> extends BeforeMiddleware {
@@ -8,22 +9,9 @@ export class QuerystringMiddleware<TSchema extends z.ZodObject> extends BeforeMi
 
   async before(arg: { req: Request }) {
     const searchParams = new URL(arg.req.url).searchParams;
-    const query = Object.fromEntries(searchParams);
-    const parse = this.schema.safeParse(query);
-    if (!parse.success) {
-      // Annotate against zod's *exported* alias, unwrapped: `flattenError`
-      // returns the non-exported `_FlattenedError`, which emit inlines — and
-      // the inlined body loses the binding for `U`. Do not wrap it: `Simplify`
-      // re-expands the annotation and loses `U` again (#8).
-      const zodError: z.core.$ZodFlattenedError<z.core.output<TSchema>> = z.flattenError(
-        parse.error,
-      );
-      return interrupt({
-        status: 400,
-        json: error("querystring", zodError),
-      } as const);
-    }
-    return next({ query: parse.data });
+    const parsed = validateSchema(this.schema, "querystring", Object.fromEntries(searchParams));
+    if (!parsed.ok) return parsed.interrupted;
+    return next({ query: parsed.data });
   }
 
   declare config: MiddlewareConfig<"querystring", z.infer<TSchema>>;
