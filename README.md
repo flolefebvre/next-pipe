@@ -132,6 +132,7 @@ if (res.status === 200) {
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/pages` | `SearchParamsMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
+| `@flefebvre/next-pipe/eslint-plugin` | flat-config plugin: `next-pipe/use-pipe-file` | [ESLint plugin](docs/eslint-plugin.md) |
 | `next-pipe` (bin) | `next-pipe gen` | [Codegen](docs/codegen.md) |
 
 ## Going further
@@ -144,6 +145,7 @@ if (res.status === 200) {
 - **[layoutPipe](docs/layout-pipe.md) / [templatePipe](docs/template-pipe.md)** — gate a whole segment from its layout or template; typed `children`, `params`, and parallel-route slots via `LayoutProps`.
 - **[Built-in middlewares](docs/built-in-middlewares.md)** — body, querystring, input and form validation; response shaping; output typing.
 - **[Write your own middleware](docs/custom-middlewares.md)** — `BeforeMiddleware`, `AfterMiddleware`, parametrized constructors (`.use(M, ...args)`), interrupts, and the `config` type channel that feeds the generated client.
+- **[The `pipe.ts` convention & ESLint plugin](docs/eslint-plugin.md)** — declare each segment's composed pipes in a `pipe.ts` and have `next-pipe/use-pipe-file` check that every page, route and action is actually built from it.
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
 - **[Migrating](docs/migrating.md)** — version-to-version upgrade notes; only needed when bumping across a breaking change.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.

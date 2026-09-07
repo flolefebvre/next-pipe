@@ -1,6 +1,6 @@
 {
   "name": "@flefebvre/next-pipe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A typed, onion-model middleware system for Next.js route handlers, server actions, form actions, and pages.",
   "type": "module",
   "license": "MIT",
@@ -58,6 +58,10 @@
       "types": "./dist/middlewares/pages/index.d.ts",
       "default": "./dist/middlewares/pages/index.js"
     },
+    "./eslint-plugin": {
+      "types": "./dist/eslint-plugin/index.d.ts",
+      "default": "./dist/eslint-plugin/index.js"
+    },
     "./package.json": "./package.json"
   },
   "bin": {
@@ -80,12 +84,16 @@
     "gate": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run typecheck:dist && pnpm fallow"
   },
   "peerDependencies": {
+    "eslint": ">=9.0.0",
     "next": ">=16.0.0",
     "react": ">=19.0.0",
     "typescript": ">=5.0.0",
     "zod": "^4.0.0"
   },
   "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    },
     "zod": {
       "optional": true
     }
