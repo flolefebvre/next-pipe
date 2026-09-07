@@ -298,14 +298,6 @@ type ActionResult<TSuccessData = unknown, TErrorKey extends string = string, TEr
 
 type MiddlewareConfig<key extends string, value> = Record<key, value>;
 
-export {
-  Pipe,
-  Middleware,
-  // fallow-ignore-next-line unused-export
-  ComposedMiddleware,
-  BeforeMiddleware,
-  AfterMiddleware,
-  PassThrough,
-};
+export { Pipe, Middleware, ComposedMiddleware, BeforeMiddleware, AfterMiddleware, PassThrough };
 export { entry, next, interrupt, success, error, createPipe, merge };
 export type { Apply, ActionSuccess, ActionError, ActionResult, MiddlewareConfig };

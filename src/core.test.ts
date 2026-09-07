@@ -45,6 +45,75 @@ class ReactNodeMiddleware extends AfterMiddleware<ReactNode> {
   }
 }
 
+/**
+ * Shared fixtures for the tests below. They exist so the same setup is written
+ * once; every assertion stays in the test that makes it, since a type-level
+ * assertion moved behind a typed parameter would assert nothing.
+ */
+
+/**
+ * Always interrupts with `value`. `fail` is annotated `boolean` so TypeScript
+ * cannot narrow the branch away — the `next` branch keeps the union alive for
+ * the type-level assertions — while the runtime result stays deterministic.
+ */
+const fail: boolean = true;
+const makeFail = <T>(value: T) =>
+  class FailMiddleware extends BeforeMiddleware {
+    async before() {
+      if (fail) return interrupt(value);
+      else return next({ id: "the id" as const });
+    }
+  };
+
+/** Turns the entry's `req` into a `user`, so it depends on what the entry provides. */
+class AddUserFromRequest extends BeforeMiddleware {
+  async before(arg: { req: Request }) {
+    return next({ user: { id: "string" } });
+  }
+}
+
+/** A handler returning the literal `"yo"`, reshaped by `M1` into `{ value: "yo" }`. */
+const returnYo = async () => "yo" as const;
+type YoValue = () => Promise<{ value: "yo" }>;
+const expectYoValue = async (handle: () => Promise<unknown>) =>
+  expect(await handle()).toStrictEqual({ value: "yo" });
+
+/** The output shape `OutputTypeMiddleware` is constrained with in the tests below. */
+type SuccessOrError = { status: "success"; data: unknown } | { status: "error"; error: unknown };
+
+const successOrErrorHandler = async () => {
+  if (Math.random()) return success("hey" as const);
+  else return error("yo" as const);
+};
+type SuccessOrErrorResult = () => Promise<
+  { status: "success"; data: "hey" } | { status: "error"; error: "yo" }
+>;
+/** `Math.random()` is truthy, so `successOrErrorHandler` always takes the success branch. */
+const expectHey = async (handle: () => Promise<unknown>) =>
+  expect(await handle()).toStrictEqual({ status: "success", data: "hey" });
+
+/**
+ * The same handler piped with and without an `OutputTypeMiddleware<ActionResult>`:
+ * both must infer the same output type and produce the same value.
+ */
+const bothPipes = <T extends ActionResult>(handler: () => Promise<T>) =>
+  [
+    new Pipe(PassThrough).handle(handler),
+    new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>).handle(handler),
+  ] as const;
+
+/** True only when *both* handles resolve to exactly `TExpected`. Asserted via `Expect` at each use. */
+type BothInfer<THandles extends readonly [unknown, unknown], TExpected> =
+  IsEqual<THandles[0], TExpected> extends true ? IsEqual<THandles[1], TExpected> : false;
+
+const expectBoth = async <T>(
+  handles: readonly [() => Promise<T>, () => Promise<T>],
+  expected: unknown,
+) => {
+  expect(await handles[0]()).toStrictEqual(expected);
+  expect(await handles[1]()).toStrictEqual(expected);
+};
+
 test("Can instantiate base pipe", () => {
   const pipe = new Pipe(PassThrough);
 });
@@ -93,72 +162,48 @@ test("Add time logger", async () => {
 
 test("Error from handler", async () => {
   {
-    const handler = async () => {
+    const handles = bothPipes(async () => {
       return success({ key: "yo" as const });
-    };
-
-    const handle1 = new Pipe(PassThrough).handle(handler);
-    const handle2 = new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>).handle(handler);
+    });
 
     type Expected = () => Promise<{ status: "success"; data: { key: "yo" } }>;
-    type TESTS = [
-      Expect<IsEqual<typeof handle1, Expected>>,
-      Expect<IsEqual<typeof handle2, Expected>>,
-    ];
+    type TESTS = Expect<BothInfer<typeof handles, Expected>>;
 
-    const expected = { status: "success", data: { key: "yo" } };
-    expect(await handle1()).toStrictEqual(expected);
-    expect(await handle2()).toStrictEqual(expected);
+    await expectBoth(handles, { status: "success", data: { key: "yo" } });
   }
   {
-    const handler = async () => {
+    const handles = bothPipes(async () => {
       if (Math.random() < 0) return success({ key: "yo" as const });
       return error("login", { key: "logerror" as const });
-    };
-
-    const handle1 = new Pipe(PassThrough).handle(handler);
-    const handle2 = new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>).handle(handler);
+    });
 
     type Expected = () => Promise<
       | { status: "success"; data: { key: "yo" } }
       | { status: "error"; error: { type: "login"; data: { key: "logerror" } } }
     >;
-    type TESTS = [
-      Expect<IsEqual<typeof handle1, Expected>>,
-      Expect<IsEqual<typeof handle2, Expected>>,
-    ];
+    type TESTS = Expect<BothInfer<typeof handles, Expected>>;
 
-    const expected = {
+    await expectBoth(handles, {
       status: "error",
       error: { type: "login", data: { key: "logerror" } },
-    };
-    expect(await handle1()).toStrictEqual(expected);
-    expect(await handle2()).toStrictEqual(expected);
+    });
   }
   {
-    const handler = async () => {
+    const handles = bothPipes(async () => {
       if (Math.random() < 0) throw new Error("");
       return error("login", { key: "" });
-    };
-
-    const handle1 = new Pipe(PassThrough).handle(handler);
-    const handle2 = new Pipe(PassThrough).use(OutputTypeMiddleware<ActionResult>).handle(handler);
+    });
 
     type Expected = () => Promise<{
       status: "error";
       error: { type: "login"; data: { key: string } };
     }>;
-    type TESTS = [
-      Expect<IsEqual<typeof handle1, Expected>>,
-      Expect<IsEqual<typeof handle2, Expected>>,
-    ];
+    type TESTS = Expect<BothInfer<typeof handles, Expected>>;
 
-    const expected = {
+    await expectBoth(handles, {
       status: "error",
       error: { type: "login", data: { key: "" } },
-    };
-    expect(await handle1()).toStrictEqual(expected);
-    expect(await handle2()).toStrictEqual(expected);
+    });
   }
 });
 
@@ -247,14 +292,6 @@ test("base pipe handlers are callable", async () => {
 });
 
 test("interrupt unions into the after-shaped result", async () => {
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (Math.random()) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
-
   const handle = new Pipe(PassThrough)
     .use(M1)
     .use(makeFail("inter" as const))
@@ -268,14 +305,6 @@ test("interrupt unions into the after-shaped result", async () => {
 });
 
 test("multiple interrupts each union into the result", async () => {
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (Math.random()) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
-
   const handle = new Pipe(PassThrough)
     .use(M1)
     .use(makeFail("inter" as const))
@@ -293,13 +322,6 @@ test("multiple interrupts each union into the result", async () => {
 });
 
 test("interrupts flow back through after middlewares", async () => {
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (Math.random()) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
   class MNumberString extends AfterMiddleware<number> {
     async after(t: this["After"]) {
       return t.toString();
@@ -319,14 +341,6 @@ test("interrupts flow back through after middlewares", async () => {
 });
 
 test("interrupt value must fit the preceding after input", () => {
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (Math.random()) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
-
   const pipe = new Pipe(PassThrough)
     .use(M1)
     // @ts-expect-error expects string
@@ -336,15 +350,6 @@ test("interrupt value must fit the preceding after input", () => {
 });
 
 test("single interrupt unions with handler return", async () => {
-  const fail: boolean = true;
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (fail === true) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
-
   const pipe = new Pipe(PassThrough)
     .use(makeFail("interruption" as const))
     .handle(async () => "hey" as const);
@@ -354,19 +359,11 @@ test("single interrupt unions with handler return", async () => {
 });
 
 test("interrupts compose across a long middleware chain", async () => {
-  const fail: boolean = true;
   class AddUser extends BeforeMiddleware {
     async before() {
       return next({ user: { id: "string" } });
     }
   }
-  const makeFail = <T>(value: T) =>
-    class FailMiddleware extends BeforeMiddleware {
-      async before() {
-        if (fail === true) return interrupt(value);
-        else return next({ id: "the id" as const });
-      }
-    };
 
   const pipe = new Pipe(PassThrough)
     .use(makeFail("interruption" as const))
@@ -428,11 +425,7 @@ test("OutputTypeMiddleware narrows unknown object fields", async () => {
 
 test("OutputTypeMiddleware narrows the success branch of a union", async () => {
   const handle = new Pipe(PassThrough)
-    .use(
-      OutputTypeMiddleware<
-        { status: "success"; data: unknown } | { status: "error"; error: unknown }
-      >,
-    )
+    .use(OutputTypeMiddleware<SuccessOrError>)
     .handle(async () => ({ status: "success", data: 3 }));
   type TEST = Expect<IsEqual<typeof handle, () => Promise<{ status: "success"; data: number }>>>;
 
@@ -441,11 +434,7 @@ test("OutputTypeMiddleware narrows the success branch of a union", async () => {
 
 test("OutputTypeMiddleware narrows the error branch of a union", async () => {
   const handle = new Pipe(PassThrough)
-    .use(
-      OutputTypeMiddleware<
-        { status: "success"; data: unknown } | { status: "error"; error: unknown }
-      >,
-    )
+    .use(OutputTypeMiddleware<SuccessOrError>)
     .handle(async () => ({ status: "error", error: 3 }));
   type TEST = Expect<IsEqual<typeof handle, () => Promise<{ status: "error"; error: number }>>>;
 
@@ -454,46 +443,21 @@ test("OutputTypeMiddleware narrows the error branch of a union", async () => {
 
 test("success/error helpers infer through OutputTypeMiddleware", async () => {
   const handle = new Pipe(PassThrough)
-    .use(
-      OutputTypeMiddleware<
-        { status: "success"; data: unknown } | { status: "error"; error: unknown }
-      >,
-    )
-    .handle(async () => {
-      if (Math.random()) return success("hey" as const);
-      else return error("yo" as const);
-    });
-  type TEST = Expect<
-    IsEqual<
-      typeof handle,
-      () => Promise<{ status: "success"; data: "hey" } | { status: "error"; error: "yo" }>
-    >
-  >;
+    .use(OutputTypeMiddleware<SuccessOrError>)
+    .handle(successOrErrorHandler);
+  type TEST = Expect<IsEqual<typeof handle, SuccessOrErrorResult>>;
 
-  // Math.random() is truthy, so the success branch runs.
-  expect(await handle()).toStrictEqual({ status: "success", data: "hey" });
+  await expectHey(handle);
 });
 
 test("success/error helpers infer with a trailing passthrough", async () => {
   const handle = new Pipe(PassThrough)
-    .use(
-      OutputTypeMiddleware<
-        { status: "success"; data: unknown } | { status: "error"; error: unknown }
-      >,
-    )
+    .use(OutputTypeMiddleware<SuccessOrError>)
     .use(PassThrough)
-    .handle(async () => {
-      if (Math.random()) return success("hey" as const);
-      else return error("yo" as const);
-    });
-  type TEST = Expect<
-    IsEqual<
-      typeof handle,
-      () => Promise<{ status: "success"; data: "hey" } | { status: "error"; error: "yo" }>
-    >
-  >;
+    .handle(successOrErrorHandler);
+  type TEST = Expect<IsEqual<typeof handle, SuccessOrErrorResult>>;
 
-  expect(await handle()).toStrictEqual({ status: "success", data: "hey" });
+  await expectHey(handle);
 });
 
 test("handle return type is enforced by OutputTypeMiddleware", () => {
@@ -501,11 +465,7 @@ test("handle return type is enforced by OutputTypeMiddleware", () => {
   const h1 = new Pipe(PassThrough).use(OutputTypeMiddleware<string>).handle(async () => 3);
 
   const h2 = new Pipe(PassThrough)
-    .use(
-      OutputTypeMiddleware<
-        { status: "success"; data: unknown } | { status: "error"; error: unknown }
-      >,
-    )
+    .use(OutputTypeMiddleware<SuccessOrError>)
     // @ts-expect-error handle return type should be the success/error union
     .handle(async () => 3);
 
@@ -514,13 +474,8 @@ test("handle return type is enforced by OutputTypeMiddleware", () => {
 });
 
 test("entry args become the handler's call signature", async () => {
-  class AddUser extends BeforeMiddleware {
-    async before(arg: { req: Request }) {
-      return next({ user: { id: "string" } });
-    }
-  }
   const pipe1 = new Pipe(entry((req: Request) => ({ req })));
-  const pipe2 = pipe1.use(AddUser);
+  const pipe2 = pipe1.use(AddUserFromRequest);
   const handle = pipe2.handle(async ({ req }) => "yo" as const);
 
   type TEST = Expect<IsEqual<typeof handle, (req: Request) => Promise<"yo">>>;
@@ -551,12 +506,7 @@ test("use() requires upstream-provided context", () => {
 });
 
 test("handle accepts any subset of the accumulated input shape", async () => {
-  class AddUser extends BeforeMiddleware {
-    async before(arg: { req: Request }) {
-      return next({ user: { id: "string" } });
-    }
-  }
-  const pipe = new Pipe(entry((req: Request) => ({ req }))).use(AddUser);
+  const pipe = new Pipe(entry((req: Request) => ({ req }))).use(AddUserFromRequest);
 
   pipe.handle(async () => "yo" as const);
   pipe.handle(async ({ req, user }) => "yo" as const);
@@ -599,10 +549,10 @@ test("after middlewares must chain compatibly", () => {
 });
 
 test("a single after middleware reshapes the handler return", async () => {
-  const handle = new Pipe(PassThrough).use(M1).handle(async () => "yo" as const);
-  type TEST = Expect<IsEqual<typeof handle, () => Promise<{ value: "yo" }>>>;
+  const handle = new Pipe(PassThrough).use(M1).handle(returnYo);
+  type TEST = Expect<IsEqual<typeof handle, YoValue>>;
 
-  expect(await handle()).toStrictEqual({ value: "yo" });
+  await expectYoValue(handle);
 });
 
 test("handler return must satisfy the after middleware's input", () => {
@@ -656,10 +606,10 @@ test("an inline after middleware composes with the chain", async () => {
 });
 
 test("an after middleware can be the root of the pipe", async () => {
-  const handle = new Pipe(M1).handle(async () => "yo" as const);
-  type TEST = Expect<IsEqual<typeof handle, () => Promise<{ value: "yo" }>>>;
+  const handle = new Pipe(M1).handle(returnYo);
+  type TEST = Expect<IsEqual<typeof handle, YoValue>>;
 
-  expect(await handle()).toStrictEqual({ value: "yo" });
+  await expectYoValue(handle);
 });
 
 test("a passthrough root returns the handler value unchanged", async () => {

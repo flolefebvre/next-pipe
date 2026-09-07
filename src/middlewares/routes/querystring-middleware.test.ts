@@ -1,73 +1,34 @@
-import { expect, test } from "vitest";
-import { entry, Pipe, type __MIDDLEWARE_CONFIG, type MiddlewareConfig } from "../../core.js";
-import { ResponseMiddleware } from "./response-middleware.js";
-import { QuerystringMiddleware } from "./querystring-middleware.js";
-import type { Expect } from "../../../tests/helpers.js";
-import type { IsEqual } from "type-fest";
-import type { JsonValue } from "../../types.js";
-import type { NextResponse } from "next/server.js";
+import { test } from "vitest";
 import * as z from "zod";
+import type { IsEqual } from "type-fest";
+import {
+  expectRouteResponse,
+  routePipe,
+  routeSchemaError,
+  type Expect,
+  type ValidatedRouteHandler,
+} from "../../../tests/unit-fixtures.js";
+import { QuerystringMiddleware } from "./querystring-middleware.js";
 
 const schema = z.object({ key: z.string() });
 
-const handle = new Pipe(entry((req: Request) => ({ req })))
-  .use(ResponseMiddleware)
+const handle = routePipe()
   .use(QuerystringMiddleware, schema)
   .handle(async ({ query }) => {
     return { status: 200 as const, json: query.key };
   });
 
 test("Valid query passes schema", async () => {
-  const req = new Request("http://localhost?key=value");
-  const result = await handle(req);
-  expect(result.status).toBe(200);
-  expect(await result.json()).toBe("value");
+  await expectRouteResponse(await handle(new Request("http://localhost?key=value")), 200, "value");
 });
 
 test("Missing query param interrupts with 400", async () => {
-  const req = new Request("http://localhost");
-  const result = await handle(req);
-  expect(result.status).toBe(400);
-  expect(await result.json()).toStrictEqual({
-    status: "error",
-    error: {
-      type: "querystring",
-      data: {
-        formErrors: [],
-        fieldErrors: {
-          key: ["Invalid input: expected string, received undefined"],
-        },
-      },
-    },
-  });
+  await expectRouteResponse(
+    await handle(new Request("http://localhost")),
+    400,
+    routeSchemaError("querystring", "Invalid input: expected string, received undefined"),
+  );
 });
 
-type EXPECTED = (req: Request) => Promise<
-  NextResponse<JsonValue> & {
-    [__MIDDLEWARE_CONFIG]: MiddlewareConfig<"querystring", z.infer<typeof schema>> &
-      MiddlewareConfig<
-        "output",
-        | {
-            readonly status: 400;
-            readonly json: {
-              status: "error";
-              error: {
-                type: "querystring";
-                data: {
-                  formErrors: string[];
-                  fieldErrors: {
-                    key?: string[] | undefined;
-                  };
-                };
-              };
-            };
-          }
-        | {
-            status: 200;
-            json: string;
-          }
-      >;
-  }
->;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type TEST = Expect<IsEqual<typeof handle, EXPECTED>>;
+type TEST = Expect<IsEqual<typeof handle, ValidatedRouteHandler<"querystring">>>;
