@@ -2,6 +2,8 @@
 
 Decision rule: submitted from `<form action={...}>` with `useActionState` → `formActionPipe`. Called from code (`await doThing(arg)`) → `actionPipe`.
 
+> If a `pipe.ts` at this file's level or above exports the kind used below, import the pipe from **that** file instead of from `@flefebvre/next-pipe/pipes` — the closest one wins. See [setup.md](setup.md).
+
 Both speak the result protocol instead of HTTP:
 
 ```ts

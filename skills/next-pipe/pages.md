@@ -2,6 +2,8 @@
 
 `pagePipe()` runs the same middleware onion in front of a page; the handler returns JSX (output pinned to `React.ReactNode`).
 
+> If a `pipe.ts` at this file's level or above exports the kind used below, import the pipe from **that** file instead of from `@flefebvre/next-pipe/pipes` — the closest one wins. See [setup.md](setup.md).
+
 ```tsx
 // app/notes/page.tsx
 import { pagePipe } from "@flefebvre/next-pipe/pipes";

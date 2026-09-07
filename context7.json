@@ -9,18 +9,22 @@
   "excludeFiles": ["AGENTS.md", "CLAUDE.md"],
   "rules": [
     "Every server entry point goes through a pipe: routePipe<RouteContext<\"/path\">>(), actionPipe(schema?), formActionPipe(schema?), pagePipe<PageProps<\"/path\">>(), layoutPipe<LayoutProps<\"/path\">>(), templatePipe(). Never write a bare handler or action.",
-    "Subpath imports are strict and there is no root export: pipes from @flefebvre/next-pipe/pipes; next, interrupt, success, error, json from /server; callRoute, useApiCall, getActionError from /client; middlewares from /middlewares and /middlewares/routes.",
+    "A pipe.ts in any directory exports that segment's composed pipes and may only export these six names: pagePipe, layoutPipe, templatePipe, routePipe, actionPipe, formActionPipe. Type-only exports are allowed.",
+    "The closest pipe.ts at or above a file that exports the file's kind governs it: import that binding, add .use(...), then .handle(...). Never reach past it to a higher pipe.ts or to the library constructor.",
+    "Enable the ESLint plugin to enforce the pipe.ts convention: `import nextPipe from \"@flefebvre/next-pipe/eslint-plugin\"` then spread `...nextPipe.configs.recommended` in eslint.config.mjs. Flat config only; eslint is an optional peer dependency.",
+    "Subpath imports are strict and there is no root export. The only entry points are: /pipes, /server, /client, /middlewares, /middlewares/routes, /middlewares/actions, /middlewares/form-actions, /middlewares/pages, /eslint-plugin.",
+    "Import pipes from /pipes; next, interrupt, success, error, json, Pipe, entry, createPipe, merge from /server; callRoute, useApiCall, getActionError, getActionInput, defineRoute from /client.",
     "Route handlers return { status, json } via the json(status, body) helper, never a raw Response or NextResponse. ResponseMiddleware, which routePipe() wires in for you, performs the conversion.",
     "Route interrupts and manual returns need `as const` (the json() helper applies it). Without it, status widens to number and the generated client's response union stops discriminating.",
     "Interrupt in the surface's dialect: routes use interrupt({ status, json } as const); actions and form actions use interrupt(error(key, data)); pages, layouts and templates use redirect() or notFound(), which throw and need no interrupt.",
     "A middleware is a class extending BeforeMiddleware, AfterMiddleware or Middleware. before() returns next({ ... }) to merge typed values into the handler input, or interrupt(value) to short-circuit. after() runs in reverse order.",
     "A middleware declares its dependency on an earlier one by typing its before() parameter, e.g. before(arg: { user: SafeUser }). Composing it too early is then a compile error rather than a runtime bug.",
     "Re-run codegen (`next-pipe gen`) after adding, removing or moving routes, verbs or path params. Body and query type changes flow through `import type` automatically and need no re-run.",
-    "Generated builders and barrel members carry the verb verbatim, uppercase: routes.api.notes(id).like.POST(); definition.method is "POST".",
+    "Generated builders and barrel members carry the verb verbatim, uppercase: routes.api.notes(id).like.POST(); definition.method is the string \"POST\".",
     "Client code imports only from @flefebvre/next-pipe/client and the generated routes barrel, never from /server, /pipes or middleware files.",
     "zod is an optional peer dependency, needed only by the validation middlewares and by actionPipe(schema)/formActionPipe(schema). The schemaless actionPipe()/formActionPipe() work without it.",
     "Requires Next.js >= 16 (App Router), React >= 19, TypeScript >= 5 and Node >= 22. RouteContext, PageProps and LayoutProps are Next.js-generated globals and need no import.",
     "This package follows semver: breaking changes only in major versions. If a snippet does not typecheck, trust the installed package's .d.ts in node_modules over the docs."
   ],
-  "previousVersions": [{ "tag": "v0.1.0" }, { "tag": "v0.2.0" }]
+  "previousVersions": [{ "tag": "v0.1.0" }, { "tag": "v0.2.0" }, { "tag": "v1.0.0" }]
 }

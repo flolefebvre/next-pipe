@@ -63,6 +63,7 @@ import {
 import { InputValidationMiddleware } from "@flefebvre/next-pipe/middlewares/actions";
 import { FormValidationMiddleware } from "@flefebvre/next-pipe/middlewares/form-actions";
 import { SearchParamsMiddleware } from "@flefebvre/next-pipe/middlewares/pages";
+import nextPipeEslintPlugin from "@flefebvre/next-pipe/eslint-plugin";
 
 export {
   Pipe,
@@ -95,6 +96,7 @@ export {
   InputValidationMiddleware,
   FormValidationMiddleware,
   SearchParamsMiddleware,
+  nextPipeEslintPlugin,
 };
 export type {
   ActionSuccess,

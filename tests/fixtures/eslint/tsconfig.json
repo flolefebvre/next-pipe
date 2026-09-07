@@ -1,0 +1,17 @@
+{
+  // Resolution only: these fixtures are never compiled (the root tsconfig
+  // excludes `tests/fixtures`). The rule reads this file to resolve imports the
+  // way a real Next.js app does — bundler resolution plus a `@/*` alias — so
+  // alias-resolved `pipe.ts` imports are covered by the tests.
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@flefebvre/next-pipe/*": ["../../../src/*"]
+    }
+  },
+  "include": ["src"]
+}

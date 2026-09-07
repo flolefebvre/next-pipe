@@ -7,7 +7,7 @@ description: Write Next.js server code with next-pipe (@flefebvre/next-pipe). Us
 
 next-pipe (`@flefebvre/next-pipe`) is a typed, onion-model middleware system for the Next.js App Router server entry points — route handlers, server actions, form actions, pages, layouts, and templates — plus a generated, fully typed client for routes.
 
-> This skill documents **v1.0.0**.
+> This skill documents **v1.1.0**.
 
 ## The onion
 
@@ -40,22 +40,24 @@ Subpath imports are strict — these are the only entry points:
 | `@flefebvre/next-pipe/middlewares/actions`      | `InputValidationMiddleware`                                                                     |
 | `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware`                                                                      |
 | `@flefebvre/next-pipe/middlewares/pages`        | `SearchParamsMiddleware`                                                                        |
+| `@flefebvre/next-pipe/eslint-plugin`            | flat-config ESLint plugin: `next-pipe/use-pipe-file`                                            |
 
 ## Iron rules
 
 1. **Every server entry point goes through a pipe.** In a project using next-pipe, never write a bare route handler, server action, form action, or gated page — build it with the matching pipe so its middlewares and typed contract apply.
-2. **Interrupt in the surface's dialect**: routes → `interrupt({ status, json } as const)`; actions and form actions → `interrupt(error(key, data))`; pages, layouts, and templates → `redirect(...)` / `notFound()` (they throw, no interrupt needed).
-3. **Route interrupts and manual returns need `as const`** (the `json()` helper does it for you) — without it, `status` widens to `number` and the client union stops discriminating.
-4. **Route handlers return `{ status, json }` via `json(status, body)`** — never a raw `Response`/`NextResponse`; `ResponseMiddleware` does the conversion.
-5. **Re-run codegen (`next-pipe gen`) after adding, removing, or moving routes, verbs, or path params.** Body/query type changes flow through `import type` automatically and need no re-run.
-6. **Client code imports only from `@flefebvre/next-pipe/client` and the generated routes barrel** — never from `/server`, `/pipes`, or middleware files.
-7. **Follow the project's existing conventions first** (middleware location, script names, generated-output path); only when there is no precedent, use this skill's defaults: `lib/middlewares/`, a `"gen": "next-pipe gen"` script, generated output at `src/generated/routes`.
+2. **Honour `pipe.ts`.** A `pipe.ts` in any directory exports the segment's composed pipes, named exactly `pagePipe`, `layoutPipe`, `templatePipe`, `routePipe`, `actionPipe`, `formActionPipe` — and nothing else (type-only exports aside). The **closest** `pipe.ts` at or above a file that exports the file's kind governs it: import that binding, `.use(...)` what you need, then `.handle(...)`. Never reach past it to a higher `pipe.ts` or to the library constructor. Where no `pipe.ts` above a file exports its kind, use the library constructor as usual.
+3. **Interrupt in the surface's dialect**: routes → `interrupt({ status, json } as const)`; actions and form actions → `interrupt(error(key, data))`; pages, layouts, and templates → `redirect(...)` / `notFound()` (they throw, no interrupt needed).
+4. **Route interrupts and manual returns need `as const`** (the `json()` helper does it for you) — without it, `status` widens to `number` and the client union stops discriminating.
+5. **Route handlers return `{ status, json }` via `json(status, body)`** — never a raw `Response`/`NextResponse`; `ResponseMiddleware` does the conversion.
+6. **Re-run codegen (`next-pipe gen`) after adding, removing, or moving routes, verbs, or path params.** Body/query type changes flow through `import type` automatically and need no re-run.
+7. **Client code imports only from `@flefebvre/next-pipe/client` and the generated routes barrel** — never from `/server`, `/pipes`, or middleware files.
+8. **Follow the project's existing conventions first** (middleware location, script names, generated-output path); only when there is no precedent, use this skill's defaults: `lib/middlewares/`, a `"gen": "next-pipe gen"` script, generated output at `src/generated/routes`.
 
 ## Task files
 
 Load exactly the file for the job at hand:
 
-- **[setup.md](setup.md)** — load when installing next-pipe, wiring codegen, or writing the project's first middleware.
+- **[setup.md](setup.md)** — load when installing next-pipe, wiring codegen, writing the project's first middleware, setting up a `pipe.ts`, or turning on the ESLint plugin.
 - **[routes.md](routes.md)** — load when creating or editing a route handler, or calling a route from the client (`callRoute` / `useApiCall`).
 - **[actions.md](actions.md)** — load when creating or editing a server action or form action, or reading their results (`getActionError`).
 - **[pages.md](pages.md)** — load when putting middlewares in front of a page, layout, or template (auth gates, search-param validation).

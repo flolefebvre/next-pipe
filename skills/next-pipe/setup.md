@@ -63,8 +63,45 @@ export class AuthMiddleware extends BeforeMiddleware {
 
 Adapt `getSessionUser` to whatever session mechanism the project already has — do not invent a new auth system.
 
+## 4. Declare the segment's pipes in a `pipe.ts`
+
+Rather than repeating `.use(AuthMiddleware)` in every file, put the composed pipes in a `pipe.ts` — one per segment that needs its own middlewares. The export names are the contract: `pagePipe`, `layoutPipe`, `templatePipe`, `routePipe`, `actionPipe`, `formActionPipe`, and nothing else (type-only exports aside).
+
+```ts
+// src/app/pipe.ts
+import { pagePipe as basePagePipe, routePipe as baseRoutePipe } from "@flefebvre/next-pipe/pipes";
+import { AuthMiddleware } from "@/lib/middlewares/auth-middleware";
+
+export const pagePipe = basePagePipe().use(AuthMiddleware);
+export const routePipe = baseRoutePipe().use(AuthMiddleware);
+```
+
+```tsx
+// src/app/notes/page.tsx
+import { pagePipe } from "@/app/pipe";
+
+export default pagePipe.handle(async ({ user }) => <main>Hi {user.username}</main>);
+```
+
+The `as basePagePipe` rename frees the local name for the composed pipe. `pipe.ts` files layer: a deeper one imports the one above (`import { pagePipe as appPagePipe } from "../pipe"`) and adds to it. The **closest** `pipe.ts` at or above a file that exports the file's kind is the one it must be built from — reaching past it skips a layer of middlewares.
+
+## 5. Turn on the ESLint plugin (optional, recommended)
+
+`next-pipe/use-pipe-file` checks that every governed `page`, `layout`, `template`, `route` file (either extension) and every `"use server"` export is really built from the governing `pipe.ts`. Flat config only; `eslint` is an optional peer dependency (`>=9`).
+
+```js
+// eslint.config.mjs
+import nextPipe from "@flefebvre/next-pipe/eslint-plugin";
+
+export default [
+  // your other config…
+  ...nextPipe.configs.recommended,
+];
+```
+
 ## Done when
 
 - The package (and zod, if any validation middleware will be used) is installed.
 - If routes are in scope: the `gen` script exists, `pnpm gen` runs cleanly, and the generated output is either committed or gitignored+wired into CI.
 - At least the auth middleware compiles against the project's real session logic.
+- If the project has segment-wide middlewares: a `pipe.ts` exports them and the files below import from it.

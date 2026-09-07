@@ -2,6 +2,8 @@
 
 Write the route → validate → regenerate the client → call it. All four steps below, in order.
 
+> If a `pipe.ts` at this file's level or above exports the kind used below, import the pipe from **that** file instead of from `@flefebvre/next-pipe/pipes` — the closest one wins. See [setup.md](setup.md).
+
 ## 1. The route
 
 ```ts
