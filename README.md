@@ -147,16 +147,17 @@ if (res.status === 200) {
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
 - **[Migrating](docs/migrating.md)** — version-to-version upgrade notes; only needed when bumping across a breaking change.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.
+- **[For AI coding agents](docs/for-agents.md)** — the entry page for agents: which pipe for which surface, the import map, the rules, and which page to read for which task.
 
-## Agent skill
+## AI coding agents
 
-If you use an AI coding agent (Claude Code, Cursor, Codex, …), this repo ships an installable [skill](skills/next-pipe/SKILL.md) that teaches the agent next-pipe's pipes, middlewares, codegen, and client:
+The docs ship inside the package, so an agent working in your project can read them at the installed version under `node_modules/@flefebvre/next-pipe/docs/`. The entry page for agents is [docs/for-agents.md](docs/for-agents.md): which pipe for which surface, the import map, the rules, and which reference page to read for which task.
 
-```sh
-npx skills add flolefebvre/next-pipe
+Point your agent at it once by adding a line like this to your project's `AGENTS.md` (or `CLAUDE.md`, `.cursorrules`, …):
+
+```md
+Before writing or changing route handlers, server actions, form actions, pages, layouts, templates, or their middlewares, read `node_modules/@flefebvre/next-pipe/docs/for-agents.md`.
 ```
-
-(Uses the [skills CLI](https://github.com/vercel-labs/skills); or just copy `skills/next-pipe/` into your agent's skills directory, e.g. `.claude/skills/`.)
 
 ## License
 

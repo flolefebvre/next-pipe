@@ -1,6 +1,6 @@
-# Agent skill sync
+# Agent-facing docs
 
-When changing the public API or `docs/`, update `skills/next-pipe/` (and the version stamp in its `SKILL.md`) in the same PR.
+`docs/*.md` ships in the npm package; `docs/for-agents.md` is the entry page consumers point their agents at from their `AGENTS.md`. When changing the public API or `docs/`: update the surface table, import map, rules and task table in `docs/for-agents.md` if affected, and keep `context7.json`'s `rules` in step with its Rules section. `docs/agents/` is repo-internal and is not published.
 
 # Commands
 
