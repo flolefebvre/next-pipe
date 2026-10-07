@@ -1,5 +1,7 @@
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+#!/usr/bin/env node
+import { existsSync, mkdirSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import ts from "typescript";
 import { analyzeModule, buildProgram, parseTsconfig } from "./analyze-routes.js";
@@ -195,7 +197,7 @@ function resolveOptions(flags: CliFlags, cwd: string): GenerateOptions {
   };
 }
 
-export function runGenCli(argv: string[]): void {
+function runCli(argv: string[]): void {
   let flags: CliFlags;
   try {
     ({ values: flags } = parseArgs({
@@ -221,4 +223,21 @@ export function runGenCli(argv: string[]): void {
     return;
   }
   generate(resolveOptions(flags, process.cwd()));
+}
+
+// Only run when invoked as the CLI entry, not when imported (e.g. by tests).
+// Resolve symlinks before comparing: under pnpm/`pnpm link` the package dir is a
+// symlink, so `process.argv[1]` (as invoked) and `import.meta.url` (realpath) differ.
+function isCliEntry(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(entry)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isCliEntry()) {
+  runCli(process.argv.slice(2));
 }

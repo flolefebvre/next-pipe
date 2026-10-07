@@ -50,7 +50,7 @@ Subpath imports are strict and there is no root export. These are the only entry
 1. Install `@flefebvre/next-pipe` with the project's package manager; add `zod` (v4) only if validation middlewares or `actionPipe(schema)` / `formActionPipe(schema)` will be used. See [Install](../README.md#install).
 2. Only if the project will call routes from the client: add the `"gen"` script, run it once, and either commit the output or gitignore it and run `next-pipe gen` in CI before `next build` and `tsc`. The out-dir is wiped on every run. Skip this step for projects that use only actions, form actions and pages. See [Codegen](codegen.md).
 3. Write the first middleware, almost always an auth gate, in the dialect of the surface: a route-flavored `RouteAuthMiddleware` that interrupts with a 401 ([example](custom-middlewares.md#the-minimal-gate)) and a page/action-flavored `AuthMiddleware` that redirects ([example](page-pipe.md#redirect-style-gates)). Adapt `getSessionUser` to the session mechanism the project already has; do not invent a new auth system.
-4. Run `npx next-pipe agents-md` once so `AGENTS.md` points future sessions here.
+4. Add a line to the project's `AGENTS.md` pointing at `node_modules/@flefebvre/next-pipe/docs/for-agents.md`, so future sessions start here.
 
 ## By task
 

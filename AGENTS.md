@@ -1,6 +1,6 @@
 # Agent-facing docs
 
-`docs/*.md` ships in the npm package; `docs/for-agents.md` is the entry page the `next-pipe agents-md` block points at. When changing the public API or `docs/`: update the surface table, import map, rules and task table in `docs/for-agents.md` if affected, and keep `context7.json`'s `rules` in step with its Rules section. The block's path to `for-agents.md` lives in `AGENT_RULES_BLOCK` (`src/cli/agents-md.ts`) and in the README; tests tie the three together, so a rename fails the gate. `docs/agents/` and `docs/adr/` are repo-internal and are not published.
+`docs/*.md` ships in the npm package; `docs/for-agents.md` is the entry page consumers point their agents at from their `AGENTS.md`. When changing the public API or `docs/`: update the surface table, import map, rules and task table in `docs/for-agents.md` if affected, and keep `context7.json`'s `rules` in step with its Rules section. `docs/agents/` is repo-internal and is not published.
 
 # Commands
 

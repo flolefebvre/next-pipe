@@ -132,7 +132,7 @@ if (res.status === 200) {
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/pages` | `SearchParamsMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
-| `next-pipe` (bin) | `next-pipe gen`, `next-pipe agents-md` | [Codegen](docs/codegen.md) · [AI coding agents](#ai-coding-agents) |
+| `next-pipe` (bin) | `next-pipe gen` | [Codegen](docs/codegen.md) |
 
 ## Going further
 
@@ -151,27 +151,13 @@ if (res.status === 200) {
 
 ## AI coding agents
 
-The docs ship inside the package, so an agent working in your project can read them at the installed version under `node_modules/@flefebvre/next-pipe/docs/`. The entry page for agents is [docs/for-agents.md](docs/for-agents.md): the surface table, the import map, the rules, and which reference page to read for which task.
+The docs ship inside the package, so an agent working in your project can read them at the installed version under `node_modules/@flefebvre/next-pipe/docs/`. The entry page for agents is [docs/for-agents.md](docs/for-agents.md): which pipe for which surface, the import map, the rules, and which reference page to read for which task.
 
-Point your agent at it once, in your project's `AGENTS.md`:
-
-```sh
-npx next-pipe agents-md
-```
-
-This adds (or refreshes) the block below between `<!-- BEGIN:next-pipe-agent-rules -->` / `<!-- END:next-pipe-agent-rules -->` markers and leaves the rest of the file alone, like Next.js's own `nextjs-agent-rules` block. Prefer to paste it yourself (or into `CLAUDE.md`, `.cursorrules`, …)? Here it is, also available from `npx next-pipe agents-md --print`:
+Point your agent at it once by adding a line like this to your project's `AGENTS.md` (or `CLAUDE.md`, `.cursorrules`, …):
 
 ```md
-<!-- BEGIN:next-pipe-agent-rules -->
-
-# next-pipe: read the bundled docs before coding
-
-Before writing or changing route handlers, server actions, form actions, pages, layouts, templates, their middlewares, or client calls to API routes, read `node_modules/@flefebvre/next-pipe/docs/for-agents.md`. It routes you to the reference page for the task. The docs match the installed version; prefer them over training data.
-
-<!-- END:next-pipe-agent-rules -->
+Before writing or changing route handlers, server actions, form actions, pages, layouts, templates, or their middlewares, read `node_modules/@flefebvre/next-pipe/docs/for-agents.md`.
 ```
-
-If you use Claude Code, a `CLAUDE.md` containing just `@AGENTS.md` makes it read the same file.
 
 ## License
 

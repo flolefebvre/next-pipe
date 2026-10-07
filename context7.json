@@ -5,7 +5,7 @@
   "projectTitle": "next-pipe",
   "description": "A typed, onion-model middleware system for Next.js App Router route handlers, server actions, form actions and pages, plus a generated typed client for routes.",
   "folders": ["docs"],
-  "excludeFolders": ["docs/agents", "docs/adr"],
+  "excludeFolders": ["docs/agents"],
   "excludeFiles": ["AGENTS.md", "CLAUDE.md"],
   "rules": [
     "Every server entry point goes through a pipe: routePipe<RouteContext<\"/path\">>(), actionPipe(schema?), formActionPipe(schema?), pagePipe<PageProps<\"/path\">>(), layoutPipe<LayoutProps<\"/path\">>(), templatePipe(). Never write a bare handler or action.",

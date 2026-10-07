@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { AGENT_RULES_BLOCK } from "../src/cli/agents-md.js";
 
 // The README is a table of contents for `docs/`. Those pages
 // have to ship in the tarball, next to the README, at the installed version:
@@ -33,16 +32,7 @@ test("every relative README link is in the published tarball", () => {
 
 test("repo-internal agent docs are not published", () => {
   expect(packed.filter((p) => p.startsWith("docs/agents/"))).toEqual([]);
-  expect(packed.filter((p) => p.startsWith("docs/adr/"))).toEqual([]);
   expect(packed.filter((p) => p.startsWith("skills/"))).toEqual([]);
-});
-
-// `next-pipe agents-md` writes this path into consumers' AGENTS.md; a dead
-// path there sends every agent nowhere.
-test("the path the AGENTS.md block points at is in the tarball", () => {
-  const page = /node_modules\/@flefebvre\/next-pipe\/(docs\/[^\s`]+)/.exec(AGENT_RULES_BLOCK)?.[1];
-  expect(page).toBeDefined();
-  expect(packed).toContain(page);
 });
 
 // `npm pack` lists `dist/` files only once they are built, and `gate` runs the
