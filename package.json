@@ -65,6 +65,8 @@
   },
   "files": [
     "dist",
+    "docs/*.md",
+    "skills",
     "LICENSE"
   ],
   "scripts": {
@@ -76,7 +78,7 @@
     "format": "pnpm exec prettier -w src && echo 'FORMAT OK'",
     "test": "vitest --run && echo 'TEST OK'",
     "lint": "eslint --max-warnings 0 && echo 'LINT OK'",
-    "fallow":"fallow --only dead-code,dupes && echo 'FALLOW OK'",
+    "fallow": "fallow --only dead-code,dupes && echo 'FALLOW OK'",
     "gate": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run typecheck:dist && pnpm fallow"
   },
   "peerDependencies": {
