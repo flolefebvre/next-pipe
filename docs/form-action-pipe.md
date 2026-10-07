@@ -2,7 +2,7 @@
 
 `formActionPipe` builds server actions designed for `<form action={...}>` + React's `useActionState`. Two forms:
 
-- `formActionPipe(schema)` — the `FormData` entries are validated against a zod schema before anything else runs, and submitted values are echoed back on every result.
+- `formActionPipe(schema)` — the `FormData` entries are validated against a zod schema before anything else runs, and the submitted strings are echoed back on every result.
 - `formActionPipe()` — no validation wired in: the handler receives the raw entries. Chain [`FormValidationMiddleware`](built-in-middlewares.md#formvalidationmiddleware) yourself if you want validation elsewhere in the chain (see [Middlewares on form actions](#middlewares-on-form-actions)).
 
 Both differ from [`actionPipe`](action-pipe.md) in the same way: the produced action is `(prevState, formData: FormData) => ...`, exactly what `useActionState` expects, and the `FormData` entries are collected into an object with `Object.fromEntries`.
@@ -62,13 +62,17 @@ export function LoginForm() {
 
 Note the three pieces working together:
 
-- `result?.input.username` — the echoed-back input (see below), used as `defaultValue` so a failed submit doesn't wipe the form.
+- `result?.input.username` — the echoed-back input (see below): what the user typed, used as `defaultValue` so a failed submit doesn't wipe the form, including the field that failed.
 - `getActionError(result, "schema")` — zod's `{ formErrors, fieldErrors }`, typed to the schema's keys.
 - `getActionError(result, "credentials")` — the handler's own error, typed as `string`.
 
 ## How input echoing works
 
-On a validation failure, the middleware can't hand you `z.infer<typeof schema>` — the input didn't parse. Instead it re-parses each field *individually*, best-effort: valid fields keep their parsed values, invalid or missing ones become `undefined`. The result is attached as `input` on the interrupt, and the middleware's `after` merges the same `input` into handler-returned results too. That's why `result?.input.username` is available on every result that passes through `FormValidationMiddleware`, whichever key failed.
+The echo is the submitted strings for the schema's keys, exactly as typed and never parsed. A user who typed `ada.lovelace@exmaple` gets `ada.lovelace@exmaple` back, so the field that failed validation refills too. `File` entries, missing keys and keys outside the schema are left out. The type follows: `{ [K in keyof schema]?: string }`, so a `z.coerce.number()` field echoes as `string`.
+
+It is attached as `input` on the validation interrupt, and the middleware's `after` merges the same `input` into handler-returned results (`success` and business `error`s) too. That's why `result?.input.username` is available on every result that passes through `FormValidationMiddleware`, whichever key failed.
+
+The two `input`s differ on purpose. The handler's `input` is the parsed, schema-typed value (`seats: number`), which is the one to run logic on. The result's `input` is the raw echo (`seats?: string`), and it exists to feed `defaultValue`. Don't branch on it.
 
 Echoing is the middleware's feature: results produced *upstream* of it — an interrupt from a middleware placed before validation, or any result of a schemaless `formActionPipe()` — carry no `input` field.
 

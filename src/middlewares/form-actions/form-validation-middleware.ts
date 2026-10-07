@@ -1,6 +1,14 @@
 import { error, interrupt, merge, Middleware, next, type ActionResult } from "../../core.js";
 import * as z from "zod";
 
+/**
+ * The `input` echoed onto results: the raw submitted string for each schema
+ * key, meant to refill a form via `defaultValue`. Never parsed.
+ */
+type FormInputEcho<TSchema extends z.ZodObject> = {
+  [K in keyof TSchema["shape"]]?: string;
+};
+
 export class FormValidationMiddleware<
   TSchema extends z.ZodObject,
 > extends Middleware<ActionResult> {
@@ -21,7 +29,7 @@ export class FormValidationMiddleware<
         parse.error,
       );
       return interrupt({
-        input: this.parsedPartial(),
+        input: this.rawEcho(),
         ...error("schema", zodError),
       });
     }
@@ -29,24 +37,17 @@ export class FormValidationMiddleware<
   }
 
   async after(t: this["After"]) {
-    return merge(t, { input: this.parsedPartial() });
+    return merge(t, { input: this.rawEcho() });
   }
 
-  private parsedPartial() {
-    const schema = this.partial<TSchema["shape"]>(this.schema);
-    return schema.parse(this.input);
-  }
-
-  private partial<T extends Readonly<{ [k: string]: z.ZodType }>>(
-    schema: z.ZodObject<T, z.core.$strip>,
-  ) {
-    const entries = Object.entries(schema.shape).map(([k, v]) => [
-      k,
-      v.optional().catch(undefined),
-    ]);
-    const obj = Object.fromEntries(entries) as {
-      [K in keyof T]: z.ZodCatch<z.ZodOptional<T[K]>>;
-    };
-    return z.object(obj);
+  /** The submitted strings for the schema's keys; files and missing keys are omitted. */
+  private rawEcho(): FormInputEcho<TSchema> {
+    const input = this.input ?? {};
+    const echo: Record<string, string> = {};
+    for (const key of Object.keys(this.schema.shape)) {
+      const value = input[key];
+      if (typeof value === "string") echo[key] = value;
+    }
+    return echo as FormInputEcho<TSchema>;
   }
 }

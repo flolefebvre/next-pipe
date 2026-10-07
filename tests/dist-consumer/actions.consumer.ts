@@ -15,11 +15,19 @@ import { getActionError, getActionInput } from "@flefebvre/next-pipe/client";
 
 const schema = z.object({ name: z.string() });
 
+/**
+ * Form schema with a coerced field: the handler sees `seats: number`, while the
+ * echoed result `input` carries the raw submitted strings (`seats?: string`).
+ */
+const formSchema = z.object({ name: z.string(), seats: z.coerce.number() });
+
 /* --- form actions --- */
 
-const formAction = formActionPipe(schema).handle(async (arg) => {
+const formAction = formActionPipe(formSchema).handle(async (arg) => {
   type FormActionInputIsNotAny = Expect<Not<IsAny<(typeof arg)["input"]>>>;
-  type FormActionInputIsTyped = Expect<IsEqual<typeof arg, { input: { name: string } }>>;
+  type FormActionInputIsTyped = Expect<
+    IsEqual<typeof arg, { input: { name: string; seats: number } }>
+  >;
   return success(arg.input.name);
 });
 
@@ -32,11 +40,18 @@ type FormActionResultIsTyped = Expect<
         status: "error";
         error: {
           type: "schema";
-          data: { formErrors: string[]; fieldErrors: { name?: string[] | undefined } };
+          data: {
+            formErrors: string[];
+            fieldErrors: { name?: string[] | undefined; seats?: string[] | undefined };
+          };
         };
-        input: { name?: string | undefined };
+        input: { name?: string | undefined; seats?: string | undefined };
       }
-    | { status: "success"; data: string; input: { name?: string | undefined } }
+    | {
+        status: "success";
+        data: string;
+        input: { name?: string | undefined; seats?: string | undefined };
+      }
   >
 >;
 
@@ -47,14 +62,17 @@ type FieldErrorsAreNotAny = Expect<Not<IsAny<NonNullable<typeof fieldErrors>["fi
 type FieldErrorsAreTyped = Expect<
   IsEqual<
     typeof fieldErrors,
-    { formErrors: string[]; fieldErrors: { name?: string[] | undefined } } | null
+    {
+      formErrors: string[];
+      fieldErrors: { name?: string[] | undefined; seats?: string[] | undefined };
+    } | null
   >
 >;
 
 /* --- form actions, multi-branch handler (#10) --- */
 
 /** A handler with more than one return shape — the union that collapsed in #10. */
-const multiBranchFormAction = formActionPipe(schema).handle(async ({ input }) => {
+const multiBranchFormAction = formActionPipe(formSchema).handle(async ({ input }) => {
   if (input.name === "taken") return error("taken", "already used" as const);
   return success(input.name);
 });
@@ -68,16 +86,23 @@ type MultiBranchResultIsDiscriminated = Expect<
         status: "error";
         error: {
           type: "schema";
-          data: { formErrors: string[]; fieldErrors: { name?: string[] | undefined } };
+          data: {
+            formErrors: string[];
+            fieldErrors: { name?: string[] | undefined; seats?: string[] | undefined };
+          };
         };
-        input: { name?: string | undefined };
+        input: { name?: string | undefined; seats?: string | undefined };
       }
     | {
         status: "error";
         error: { type: "taken"; data: "already used" };
-        input: { name?: string | undefined };
+        input: { name?: string | undefined; seats?: string | undefined };
       }
-    | { status: "success"; data: string; input: { name?: string | undefined } }
+    | {
+        status: "success";
+        data: string;
+        input: { name?: string | undefined; seats?: string | undefined };
+      }
   >
 >;
 
@@ -93,7 +118,10 @@ type TakenErrorIsTyped = Expect<IsEqual<typeof takenError, "already used" | null
 type SchemaErrorSurvivesMultiBranch = Expect<
   IsEqual<
     ReturnType<typeof getActionError<MultiBranchResult, "schema">>,
-    { formErrors: string[]; fieldErrors: { name?: string[] | undefined } } | null
+    {
+      formErrors: string[];
+      fieldErrors: { name?: string[] | undefined; seats?: string[] | undefined };
+    } | null
   >
 >;
 
@@ -101,7 +129,7 @@ const echoedInput = getActionInput(multiBranchResult);
 
 type EchoedInputIsNotAny = Expect<Not<IsAny<typeof echoedInput>>>;
 type EchoedInputIsTyped = Expect<
-  IsEqual<typeof echoedInput, { name?: string | undefined } | null>
+  IsEqual<typeof echoedInput, { name?: string | undefined; seats?: string | undefined } | null>
 >;
 
 /* --- form actions, no schema (#15) --- */
