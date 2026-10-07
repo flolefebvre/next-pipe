@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "vitest";
+import { AGENT_RULES_BLOCK } from "../src/cli/agents-md.js";
 
-// The README is a table of contents for `docs/` and `skills/`. Those pages
+// The README is a table of contents for `docs/`. Those pages
 // have to ship in the tarball, next to the README, at the installed version:
 // an agent reading `node_modules/@flefebvre/next-pipe/` otherwise finds every
 // link dead (#25). This resolves the real packlist, so a `files` edit that
@@ -32,4 +33,31 @@ test("every relative README link is in the published tarball", () => {
 
 test("repo-internal agent docs are not published", () => {
   expect(packed.filter((p) => p.startsWith("docs/agents/"))).toEqual([]);
+  expect(packed.filter((p) => p.startsWith("docs/adr/"))).toEqual([]);
+  expect(packed.filter((p) => p.startsWith("skills/"))).toEqual([]);
+});
+
+// `next-pipe agents-md` writes this path into consumers' AGENTS.md; a dead
+// path there sends every agent nowhere.
+test("the path the AGENTS.md block points at is in the tarball", () => {
+  const page = /node_modules\/@flefebvre\/next-pipe\/(docs\/[^\s`]+)/.exec(AGENT_RULES_BLOCK)?.[1];
+  expect(page).toBeDefined();
+  expect(packed).toContain(page);
+});
+
+// `npm pack` lists `dist/` files only once they are built, and `gate` runs the
+// tests before `typecheck:dist` builds: a fresh checkout has no `dist/`, a
+// local one may hold a stale build. So a `files` entry must always cover the
+// bin, and the real packlist must hold it whenever it has been built.
+test("every bin entry is in the tarball", () => {
+  const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
+    bin: Record<string, string>;
+    files: string[];
+  };
+  const bins = Object.values(pkg.bin).map((b) => b.replace(/^\.\//, ""));
+  expect(bins.length).toBeGreaterThan(0);
+  for (const bin of bins) {
+    expect(pkg.files.some((f) => bin === f || bin.startsWith(f + "/"))).toBe(true);
+    if (existsSync(bin)) expect(packed).toContain(bin);
+  }
 });

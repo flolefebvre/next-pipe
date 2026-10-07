@@ -61,12 +61,11 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "next-pipe": "./dist/codegen/generate.js"
+    "next-pipe": "./dist/cli/index.js"
   },
   "files": [
     "dist",
     "docs/*.md",
-    "skills",
     "LICENSE"
   ],
   "scripts": {

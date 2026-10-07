@@ -132,7 +132,7 @@ if (res.status === 200) {
 | `@flefebvre/next-pipe/middlewares/actions` | `InputValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/form-actions` | `FormValidationMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
 | `@flefebvre/next-pipe/middlewares/pages` | `SearchParamsMiddleware` | [Built-in middlewares](docs/built-in-middlewares.md) |
-| `next-pipe` (bin) | `next-pipe gen` | [Codegen](docs/codegen.md) |
+| `next-pipe` (bin) | `next-pipe gen`, `next-pipe agents-md` | [Codegen](docs/codegen.md) · [AI coding agents](#ai-coding-agents) |
 
 ## Going further
 
@@ -147,16 +147,31 @@ if (res.status === 200) {
 - **[Codegen](docs/codegen.md)** — how `next-pipe gen` analyzes routes through the TypeScript checker, every CLI flag, and CI setup.
 - **[Migrating](docs/migrating.md)** — version-to-version upgrade notes; only needed when bumping across a breaking change.
 - **[Client & hooks](docs/client.md)** — `defineRoute`, `callRoute` semantics (declared statuses return, everything else throws), and the `useApiCall` hook.
+- **[For AI coding agents](docs/for-agents.md)** — the entry page for agents: which pipe for which surface, the import map, the rules, and which page to read for which task.
 
-## Agent skill
+## AI coding agents
 
-If you use an AI coding agent (Claude Code, Cursor, Codex, …), this repo ships an installable [skill](skills/next-pipe/SKILL.md) that teaches the agent next-pipe's pipes, middlewares, codegen, and client:
+The docs ship inside the package, so an agent working in your project can read them at the installed version under `node_modules/@flefebvre/next-pipe/docs/`. The entry page for agents is [docs/for-agents.md](docs/for-agents.md): the surface table, the import map, the rules, and which reference page to read for which task.
+
+Point your agent at it once, in your project's `AGENTS.md`:
 
 ```sh
-npx skills add flolefebvre/next-pipe
+npx next-pipe agents-md
 ```
 
-(Uses the [skills CLI](https://github.com/vercel-labs/skills); or just copy `skills/next-pipe/` into your agent's skills directory, e.g. `.claude/skills/`.)
+This adds (or refreshes) the block below between `<!-- BEGIN:next-pipe-agent-rules -->` / `<!-- END:next-pipe-agent-rules -->` markers and leaves the rest of the file alone, like Next.js's own `nextjs-agent-rules` block. Prefer to paste it yourself (or into `CLAUDE.md`, `.cursorrules`, …)? Here it is, also available from `npx next-pipe agents-md --print`:
+
+```md
+<!-- BEGIN:next-pipe-agent-rules -->
+
+# next-pipe: read the bundled docs before coding
+
+Before writing or changing route handlers, server actions, form actions, pages, layouts, templates, their middlewares, or client calls to API routes, read `node_modules/@flefebvre/next-pipe/docs/for-agents.md`. It routes you to the reference page for the task. The docs match the installed version; prefer them over training data.
+
+<!-- END:next-pipe-agent-rules -->
+```
+
+If you use Claude Code, a `CLAUDE.md` containing just `@AGENTS.md` makes it read the same file.
 
 ## License
 
