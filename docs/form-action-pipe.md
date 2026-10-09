@@ -68,7 +68,7 @@ Note the three pieces working together:
 
 ## How input echoing works
 
-The echo is the submitted strings for the schema's keys, exactly as typed and never parsed. A user who typed `ada.lovelace@exmaple` gets `ada.lovelace@exmaple` back, so the field that failed validation refills too. `File` entries, missing keys and keys outside the schema are left out. The type follows: `{ [K in keyof schema]?: string }`, so a `z.coerce.number()` field echoes as `string`.
+The echo is the submitted strings for the schema's keys, exactly as the user entered them and never parsed. A user who typed `ada.lovelace@exmaple` gets `ada.lovelace@exmaple` back, so the field that failed validation refills too. `File` entries, missing keys and keys outside the schema are left out. The type follows: `{ [K in keyof schema]?: string }`, so a `z.coerce.number()` field echoes as `string`.
 
 It is attached as `input` on the validation interrupt, and the middleware's `after` merges the same `input` into handler-returned results (`success` and business `error`s) too. That's why `result?.input.username` is available on every result that passes through `FormValidationMiddleware`, whichever key failed.
 
