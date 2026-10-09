@@ -2,6 +2,24 @@
 
 Version-to-version upgrade notes. Only read the section for the jump you are making.
 
+## 1.0.0 → 2.0.0
+
+### Form results echo the raw submitted strings
+
+The `input` that [`FormValidationMiddleware`](form-action-pipe.md#how-input-echoing-works) echoes onto form-action results (and that `getActionInput` reads) is now the submitted strings for the schema's keys, unparsed. In 1.0 it was re-parsed field by field, and any field that failed came back `undefined`, so the form wiped exactly the field the user had to fix. Now every submitted field comes back, failed ones included.
+
+The result-side type changes for fields whose parsed type is not `string`:
+
+```ts
+const schema = z.object({ seats: z.coerce.number() });
+result.input; // 1.0 → { seats?: number }
+//               2.0 → { seats?: string }
+```
+
+Schemas whose fields are all strings see no type change. The handler's `input` is unchanged: still the parsed, schema-typed value.
+
+To migrate: let `tsc` flag the call sites. Code that only passes the echo to `defaultValue` keeps working. Code that ran logic on a parsed echoed value should read it from the handler's `input` instead, or parse the string itself. `File` entries were never usable as `defaultValue` and are no longer echoed.
+
 ## 0.x → 1.0.0
 
 ### Generated builders are the uppercase verb

@@ -60,8 +60,8 @@ Auto-wired by `actionPipe(schema)`; validates the action's single argument.
 Auto-wired first by `formActionPipe(schema)`, or [chained explicitly](form-action-pipe.md#middlewares-on-form-actions) on a schemaless `formActionPipe()` to place validation elsewhere in the chain. Validates the object collected from `FormData`.
 
 - **Success** → merges the parsed value as `input` (overriding the raw entries downstream).
-- **Failure** → interrupts with `error("schema", flattenedZodError)` **plus** an `input` field echoing back the submitted values (best-effort parsed per field; invalid fields become `undefined`).
-- Its `after` also merges that echoed `input` into handler-returned results, so forms can repopulate whatever the outcome — see [formActionPipe](form-action-pipe.md#how-input-echoing-works). Results produced upstream of this middleware carry no `input`.
+- **Failure** → interrupts with `error("schema", flattenedZodError)` **plus** an `input` field echoing back the submitted strings for the schema's keys, unparsed, invalid fields included (`File` entries and keys outside the schema are left out).
+- Its `after` also merges that same raw `input` into handler-returned results, so forms can repopulate whatever the outcome — see [formActionPipe](form-action-pipe.md#how-input-echoing-works). Results produced upstream of this middleware carry no `input`.
 
 ## SearchParamsMiddleware
 
