@@ -55,9 +55,6 @@ const multiBranch = formActionPipe(z.object({ value: z.string() })).handle(async
       | {
           status: "success";
           data: undefined;
-          input: {
-            value?: string | undefined;
-          };
         }
     >
   >;
@@ -88,7 +85,24 @@ test("multi-branch handler: error branch", async () => {
 test("multi-branch handler: success branch", async () => {
   const form = new FormData();
   form.set("value", "free");
-  expect(await multiBranch(null, form)).toStrictEqual({
+  expect(await multiBranch(null, form)).toStrictEqual({ status: "success", data: undefined });
+});
+
+test("echo: always echoes the success branch too", async () => {
+  const echoingAction = formActionPipe(z.object({ value: z.string() }), { echo: "always" }).handle(
+    async () => success(),
+  );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type SUCCESS_ECHOES = Expect<
+    IsEqual<
+      Extract<Awaited<ReturnType<typeof echoingAction>>, { status: "success" }>,
+      { status: "success"; data: undefined; input: { value?: string | undefined } }
+    >
+  >;
+
+  const form = new FormData();
+  form.set("value", "free");
+  expect(await echoingAction(null, form)).toStrictEqual({
     status: "success",
     data: undefined,
     input: { value: "free" },
@@ -163,7 +177,6 @@ const gated = formActionPipe()
       | {
           status: "success";
           data: { got: string; by: string };
-          input: { value?: string | undefined };
         }
     >
   >;
@@ -197,6 +210,5 @@ test("auth before validation: happy path", async () => {
   expect(await gated(null, form)).toStrictEqual({
     status: "success",
     data: { got: "hello", by: "flo" },
-    input: { value: "hello" },
   });
 });

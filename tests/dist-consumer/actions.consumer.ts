@@ -12,12 +12,14 @@ import type { Expect, Not } from "../helpers.js";
 import { actionPipe, formActionPipe } from "@flefebvre/next-pipe/pipes";
 import { error, success } from "@flefebvre/next-pipe/server";
 import { getActionError, getActionInput } from "@flefebvre/next-pipe/client";
+import type { FormEcho } from "@flefebvre/next-pipe/middlewares/form-actions";
 
 const schema = z.object({ name: z.string() });
 
 /**
  * Form schema with a coerced field: the handler sees `seats: number`, while the
  * echoed result `input` carries the raw submitted strings (`seats?: string`).
+ * The echo is on error results only, the default.
  */
 const formSchema = z.object({ name: z.string(), seats: z.coerce.number() });
 
@@ -50,7 +52,6 @@ type FormActionResultIsTyped = Expect<
     | {
         status: "success";
         data: string;
-        input: { name?: string | undefined; seats?: string | undefined };
       }
   >
 >;
@@ -101,7 +102,6 @@ type MultiBranchResultIsDiscriminated = Expect<
     | {
         status: "success";
         data: string;
-        input: { name?: string | undefined; seats?: string | undefined };
       }
   >
 >;
@@ -199,4 +199,45 @@ export type {
   NoSchemaTakenErrorIsTyped,
   ActionErrorIsTyped,
 };
-export { formAction, action, multiBranchFormAction, noSchemaFormAction, noSchemaMultiBranch };
+/* --- formActionPipe echo options --- */
+
+type FormEchoIsTyped = Expect<IsEqual<FormEcho, "always" | "onError">>;
+
+const signUpSchema = z.object({ name: z.string(), password: z.string() });
+
+const signUp = formActionPipe(signUpSchema, { omit: ["password"] }).handle(async ({ input }) => {
+  if (input.name === "taken") return error("nameTaken", "That name is taken" as const);
+  return success({ id: 1 });
+});
+
+type SignUpResult = Awaited<ReturnType<typeof signUp>>;
+
+type SuccessCarriesNoEchoByDefault = Expect<
+  IsEqual<Extract<SignUpResult, { status: "success" }>, { status: "success"; data: { id: number } }>
+>;
+type ErrorEchoLeavesThePasswordOut = Expect<
+  IsEqual<Extract<SignUpResult, { status: "error" }>["input"], { name?: string | undefined }>
+>;
+
+const echoingSignUp = formActionPipe(signUpSchema, { echo: "always" }).handle(async () =>
+  success(),
+);
+type SuccessEchoesWithAlways = Expect<
+  IsEqual<
+    Extract<Awaited<ReturnType<typeof echoingSignUp>>, { status: "success" }>["input"],
+    { name?: string | undefined; password?: string | undefined }
+  >
+>;
+
+// @ts-expect-error "passwrd" is not a key of the schema
+formActionPipe(signUpSchema, { omit: ["passwrd"] });
+
+export {
+  signUp,
+  echoingSignUp,
+  formAction,
+  action,
+  multiBranchFormAction,
+  noSchemaFormAction,
+  noSchemaMultiBranch,
+};
