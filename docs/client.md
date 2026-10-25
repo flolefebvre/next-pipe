@@ -143,6 +143,7 @@ export function NoteForm() {
 - **`onSuccess` / `onError`** run once per result, from the dispatch wrapper. Never run a side effect from an effect on `result`: it runs again every time the page is shown.
 - **`onLeave`** (`"keep"` by default, `"clearResult"`, `"reset"`) runs when the page is hidden: see [Leaving the page](form-action-pipe.md#leaving-the-page).
 - A `redirect(...)` in the action produces no result, so no callback runs; Next remounts the form.
+- **Without JavaScript** the form still submits: the server render hands the server action itself to `useActionState`, so React renders a form that posts to it, and the page comes back with the result (and `input`) already applied.
 
 ## defineRoute
 

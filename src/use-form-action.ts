@@ -50,6 +50,14 @@ type FormAction<Result extends FormActionResult> = {
   result: Result | null;
 };
 
+/**
+ * The server render hands `useActionState` the server action itself, so the
+ * form it renders still submits without JavaScript (progressive enhancement):
+ * React only renders a no-JS form for a server action, not for the client
+ * wrapper that runs the callbacks. The browser always uses the wrapper.
+ */
+const isServerRender = typeof window === "undefined";
+
 function isSuccess<Result extends FormActionResult>(
   result: Result,
 ): result is SuccessResult<Result> {
@@ -73,6 +81,7 @@ function isError<Result extends FormActionResult>(
  * - `onLeave` clears the result, or the whole form, when the page is hidden.
  *   A result that arrives while the page is hidden is then dropped; its
  *   callback still runs.
+ * - The form still submits without JavaScript: see `isServerRender`.
  */
 function useFormAction<Result extends FormActionResult>(
   action: (previousResult: unknown, formData: FormData) => Promise<Result>,
@@ -85,17 +94,19 @@ function useFormAction<Result extends FormActionResult>(
   const keptFormKeyRef = useRef<number | null>(null);
   const [dismissedResult, setDismissedResult] = useState<Result | null>(null);
 
-  const [settledResult, dispatch, isPending] = useActionState(
-    async (previousResult: Result | null, formData: FormData) => {
-      const submittedFormKey = formKeyRef.current;
-      const nextResult = await action(previousResult, formData);
-      const { onSuccess, onError, onLeave = "keep" } = latestOptionsRef.current;
-      keptFormKeyRef.current = isSuccess(nextResult) ? null : submittedFormKey;
-      if (isSuccess(nextResult)) onSuccess?.(nextResult);
-      if (isError(nextResult)) onError?.(nextResult);
-      const isDroppedWhileHidden = isHiddenRef.current && onLeave !== "keep";
-      return isDroppedWhileHidden ? null : nextResult;
-    },
+  async function settle(previousResult: Result | null, formData: FormData) {
+    const submittedFormKey = formKeyRef.current;
+    const nextResult = await action(previousResult, formData);
+    const { onSuccess, onError, onLeave = "keep" } = latestOptionsRef.current;
+    keptFormKeyRef.current = isSuccess(nextResult) ? null : submittedFormKey;
+    if (isSuccess(nextResult)) onSuccess?.(nextResult);
+    if (isError(nextResult)) onError?.(nextResult);
+    const isDroppedWhileHidden = isHiddenRef.current && onLeave !== "keep";
+    return isDroppedWhileHidden ? null : nextResult;
+  }
+
+  const [settledResult, dispatch, isPending] = useActionState<Result | null, FormData>(
+    isServerRender ? action : settle,
     null,
   );
   const latestSettledResultRef = useRef(settledResult);
