@@ -4,3 +4,4 @@ export { layoutPipe } from "./layout-pipe.js";
 export { templatePipe } from "./template-pipe.js";
 export { actionPipe } from "./action-pipe.js";
 export { formActionPipe } from "./form-action-pipe.js";
+export type { VisitPolicy, VisitOptions } from "../middlewares/pages/visit-middleware.js";

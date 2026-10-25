@@ -50,8 +50,21 @@ Without a generic, the handler input holds `children` only.
 
 Next never passes `searchParams` to a layout — layouts don't re-render on navigation, so the values would go stale. `layoutPipe`'s constraint rejects a prop type that includes `searchParams`, turning that misconception into a compile error at the pipe (the error points at the generic argument and mentions `never` — that's the guard firing). Read search params in the page, or in a client component via `useSearchParams`.
 
+## Visit policy
+
+`layoutPipe` takes the same `visits` option as [`pagePipe`](page-pipe.md#visit-policy), `"fresh"` by default. It applies when the layout itself is hidden, when the user leaves its segment; navigating between the pages inside a layout never hides it. A `fresh` layout remounts everything below it when it is left, pages included:
+
+```tsx
+export default layoutPipe<LayoutProps<"/dashboard">>({ visits: "keep" }).handle(
+  /* … */
+);
+```
+
+A root layout, one that renders `<html>`, is never wrapped. See [Activity](activity.md#layouts-and-nesting).
+
 ## See also
 
+- [Activity](activity.md) — visit policies and how they nest
 - [templatePipe](template-pipe.md) — the `template.tsx` twin
 - [pagePipe](page-pipe.md) — pages, redirect-style gates, search-param validation
 - [Core concepts](core-concepts.md) — `entry`, execution order, `OutputTypeMiddleware`

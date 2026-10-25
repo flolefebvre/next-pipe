@@ -1,6 +1,6 @@
 # Client & hooks
 
-`@flefebvre/next-pipe/client` is the consumer side of the [generated route builders](codegen.md): a tiny transport (`callRoute`), the builder factory the generated code uses (`defineRoute`), a pending-state hook (`useApiCall`), and typed readers for action results (`getActionError`, `getActionInput`).
+`@flefebvre/next-pipe/client` is the consumer side of the [generated route builders](codegen.md) and of form actions: a tiny transport (`callRoute`), the builder factory the generated code uses (`defineRoute`), a pending-state hook (`useApiCall`), a form hook (`useFormAction`), and typed readers for action results (`getActionError`, `getActionInput`).
 
 ## The `routes` barrel
 
@@ -101,7 +101,49 @@ const input = getActionInput(result); // { content?: string } | null
 <input name="content" defaultValue={input?.content} />;
 ```
 
-When every branch carries the echo (plain `formActionPipe(schema)`), reading `result?.input` directly is equivalent — `getActionInput` is for unions where some branches don't.
+Only error results carry the echo by default, so `result?.input` does not typecheck on the full union; `getActionInput` reads it from any union. [`useFormAction`](#useformaction) returns it as `input`.
+
+## useFormAction
+
+A `"use client"` hook wrapping `useActionState` for a [form action](form-action-pipe.md), made to behave when Next keeps the page alive in a hidden `<Activity>` ([Activity](activity.md)):
+
+```tsx
+"use client";
+
+import { useFormAction } from "@flefebvre/next-pipe/client";
+import { createNote } from "../actions";
+
+export function NoteForm() {
+  const { formKey, formProps, input, error, isPending, result } = useFormAction(createNote, {
+    onSuccess: (result) => toast(`Note ${result.data.id} saved`),
+    onLeave: "reset",
+  });
+
+  return (
+    <form key={formKey} {...formProps}>
+      <input name="title" defaultValue={input?.title} />
+      {error?.type === "titleTaken" && <p role="alert">{error.data}</p>}
+      <button disabled={isPending}>Save</button>
+      {result?.status === "success" && <p role="status">Saved</p>}
+    </form>
+  );
+}
+```
+
+| Returned    | What it is                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `formProps` | `{ action, onReset }`, spread onto the `<form>`                                                    |
+| `formKey`   | the form's `key`; `onLeave: "reset"` remounts the form through it                                  |
+| `input`     | the echoed input of an error result, for `defaultValue`; `null` otherwise                           |
+| `error`     | the error branch `{ type, data }`, narrowed by `error?.type`; `null` otherwise                      |
+| `isPending` | `true` while the action runs                                                                       |
+| `result`    | the latest result, `null` before the first one and once `onLeave` dropped it                        |
+
+- **Fields after a submit**: after an error, every field keeps what the user typed, `<select>` included: `onReset` cancels React's automatic form reset (React ≥ 19.3). A success resets the form.
+- **`onSuccess` / `onError`** run once per result, from the dispatch wrapper. Never run a side effect from an effect on `result`: it runs again every time the page is shown.
+- **`onLeave`** (`"keep"` by default, `"clearResult"`, `"reset"`) runs when the page is hidden: see [Leaving the page](form-action-pipe.md#leaving-the-page).
+- A `redirect(...)` in the action produces no result, so no callback runs; Next remounts the form.
+- **Without JavaScript** the form still submits: the server render hands the server action itself to `useActionState`, so React renders a form that posts to it, and the page comes back with the result (and `input`) already applied.
 
 ## defineRoute
 

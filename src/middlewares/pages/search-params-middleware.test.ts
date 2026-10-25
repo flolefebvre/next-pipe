@@ -10,7 +10,7 @@ const schema = z.object({
   page: z.coerce.number().catch(1),
 });
 
-const handler = pagePipe<Props>()
+const handler = pagePipe<Props>({ visits: "keep" })
   .use(SearchParamsMiddleware, schema)
   .handle(async ({ query }) => `q=${query.q} page=${query.page}`);
 

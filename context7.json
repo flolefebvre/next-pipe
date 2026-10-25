@@ -9,7 +9,7 @@
   "excludeFiles": ["AGENTS.md", "CLAUDE.md"],
   "rules": [
     "Every server entry point goes through a pipe: routePipe<RouteContext<\"/path\">>(), actionPipe(schema?), formActionPipe(schema?), pagePipe<PageProps<\"/path\">>(), layoutPipe<LayoutProps<\"/path\">>(), templatePipe(). Never write a bare handler or action.",
-    "Subpath imports are strict and there is no root export: pipes from @flefebvre/next-pipe/pipes; next, interrupt, success, error, json from /server; callRoute, useApiCall, getActionError from /client; middlewares from /middlewares and /middlewares/routes.",
+    "Subpath imports are strict and there is no root export: pipes from @flefebvre/next-pipe/pipes; next, interrupt, success, error, json from /server; callRoute, useApiCall, useFormAction, getActionError, getActionInput from /client; middlewares from /middlewares and /middlewares/routes.",
     "Route handlers return { status, json } via the json(status, body) helper, never a raw Response or NextResponse. ResponseMiddleware, which routePipe() wires in for you, performs the conversion.",
     "Route interrupts and manual returns need `as const` (the json() helper applies it). Without it, status widens to number and the generated client's response union stops discriminating.",
     "Interrupt in the surface's dialect: routes use interrupt({ status, json } as const); actions and form actions use interrupt(error(key, data)); pages, layouts and templates use redirect() or notFound(), which throw and need no interrupt.",
@@ -18,10 +18,18 @@
     "Re-run codegen (`next-pipe gen`) after adding, removing or moving routes, verbs or path params. Body and query type changes flow through `import type` automatically and need no re-run.",
     "Generated builders and barrel members carry the verb verbatim, uppercase: routes.api.notes(id).like.POST(); definition.method is \"POST\".",
     "Client code imports only from @flefebvre/next-pipe/client and the generated routes barrel, never from /server, /pipes or middleware files.",
+    "pagePipe() and layoutPipe() take { visits: \"fresh\" | \"restore\" | \"keep\" }, default \"fresh\": with Cache Components, a return to the page looks like a first visit. Use \"restore\" for pages users come back to with Back (list -> detail -> Back), \"keep\" only where every return must restore everything. Never hand-roll the reset with a key or a useLayoutEffect cleanup in a page.",
+    "Forms on a formActionPipe action use useFormAction(action, { onSuccess, onError, onLeave }) from /client: <form key={formKey} {...formProps}>, defaultValue from its input. Side effects of a result go in onSuccess/onError, never in an effect on the result, which re-runs every time the page is shown. A form is done only with a deliberate leave behaviour: onLeave \"clearResult\" or \"reset\", or a fresh page.",
+    "formActionPipe(schema, { echo, omit }) echoes the submitted strings onto error results only by default (echo: \"onError\"); echo: \"always\" echoes successes too. Pass omit: [\"password\"] for secrets, since the echo ends up in server-rendered HTML.",
     "Follow the project's existing conventions first (middleware location, script names, output path); only without precedent use the defaults: middlewares in lib/middlewares/, a \"gen\": \"next-pipe gen\" script, generated output at src/generated/routes.",
     "zod is an optional peer dependency, needed only by the validation middlewares and by actionPipe(schema)/formActionPipe(schema). The schemaless actionPipe()/formActionPipe() work without it.",
-    "Requires Next.js >= 16 (App Router), React >= 19, TypeScript >= 5 and Node >= 22. RouteContext, PageProps and LayoutProps are Next.js-generated globals and need no import.",
+    "Requires Next.js >= 16.3 (App Router), React >= 19.3, TypeScript >= 5 and Node >= 22. RouteContext, PageProps and LayoutProps are Next.js-generated globals and need no import.",
     "This package follows semver: breaking changes only in major versions. If a snippet does not typecheck, trust the installed package's .d.ts in node_modules over the docs."
   ],
-  "previousVersions": [{ "tag": "v0.1.0" }, { "tag": "v0.2.0" }, { "tag": "v1.0.0" }]
+  "previousVersions": [
+    { "tag": "v0.1.0" },
+    { "tag": "v0.2.0" },
+    { "tag": "v1.0.0" },
+    { "tag": "v2.0.0" }
+  ]
 }

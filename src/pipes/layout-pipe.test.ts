@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { BeforeMiddleware, next } from "../core.js";
 import { layoutPipe } from "./layout-pipe.js";
 
-test("passes the handler's ReactNode through unchanged", async () => {
-  const handler = layoutPipe().handle(async ({ children }) => children);
+test("with visits: keep, passes the handler's ReactNode through unchanged", async () => {
+  const handler = layoutPipe({ visits: "keep" }).handle(async ({ children }) => children);
 
   await expect(handler({ children: "the child tree" })).resolves.toBe("the child tree");
 });
@@ -15,7 +15,7 @@ test("composes middlewares without a generic argument", async () => {
     }
   }
 
-  const handler = layoutPipe()
+  const handler = layoutPipe({ visits: "keep" })
     .use(ThemeMiddleware)
     .handle(async ({ theme, children }) => `${theme}: ${String(children)}`);
 
@@ -29,10 +29,12 @@ test("threads typed children, params, and slots into the handler", async () => {
     modal: React.ReactNode;
   };
 
-  const handler = layoutPipe<Props>().handle(async ({ children, params, modal }) => {
-    const { team } = await params;
-    return `${String(children)} ${team} ${String(modal)}`;
-  });
+  const handler = layoutPipe<Props>({ visits: "keep" }).handle(
+    async ({ children, params, modal }) => {
+      const { team } = await params;
+      return `${String(children)} ${team} ${String(modal)}`;
+    },
+  );
 
   await expect(
     handler({
@@ -53,7 +55,7 @@ test("middlewares can depend on layout params", async () => {
     }
   }
 
-  const handler = layoutPipe<Props>()
+  const handler = layoutPipe<Props>({ visits: "keep" })
     .use(LoadMiddleware)
     .handle(async ({ entity, children }) => `${entity} wraps ${String(children)}`);
 

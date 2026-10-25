@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { BeforeMiddleware, next } from "../core.js";
 import { pagePipe } from "./page-pipe.js";
 
-test("passes the handler's ReactNode through unchanged", async () => {
-  const handler = pagePipe().handle(async () => "the page");
+test("with visits: keep, passes the handler's ReactNode through unchanged", async () => {
+  const handler = pagePipe({ visits: "keep" }).handle(async () => "the page");
 
   await expect(handler({})).resolves.toBe("the page");
 });
@@ -14,7 +14,7 @@ test("threads typed params and searchParams into the handler", async () => {
     searchParams: Promise<{ q?: string }>;
   };
 
-  const handler = pagePipe<Props>().handle(async ({ params, searchParams }) => {
+  const handler = pagePipe<Props>({ visits: "keep" }).handle(async ({ params, searchParams }) => {
     const { id } = await params;
     const { q } = await searchParams;
     return `page ${id} ${q ?? "-"}`;
@@ -38,7 +38,7 @@ test("middlewares can depend on page params", async () => {
     }
   }
 
-  const handler = pagePipe<Props>()
+  const handler = pagePipe<Props>({ visits: "keep" })
     .use(LoadMiddleware)
     .handle(async ({ entity }) => entity);
 

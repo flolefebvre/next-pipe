@@ -44,4 +44,9 @@ templatePipe<{ children: React.ReactNode; params: Promise<{ id: string }> }>();
 // @ts-expect-error searchParams is rejected by templatePipe's constraint
 templatePipe<{ children: React.ReactNode; searchParams: Promise<{ q?: string }> }>();
 
-export { Layout, BareLayout, Template };
+const KeptLayout = layoutPipe({ visits: "keep" }).handle(async (arg) => arg.children);
+type LayoutOutputIsReactNode = Expect<
+  IsEqual<Awaited<ReturnType<typeof KeptLayout>>, Awaited<React.ReactNode>>
+>;
+
+export { Layout, BareLayout, Template, KeptLayout };

@@ -24,6 +24,8 @@ One limitation to know: TypeScript's structural typing can't ban *arbitrary* ext
 
 Same prop shape (minus `params`), different lifecycle: a layout **persists** across navigations within its segment; a template **remounts** — state resets, effects re-run, and `children` gets a fresh key. That difference lives entirely in Next's renderer; pick the file convention for the lifecycle you want and the matching pipe follows.
 
+With Cache Components (`cacheComponents: true`), a template no longer remounts when the user comes back to a route: it renders inside the segment's `<Activity>`, which Next hides and shows again instead of unmounting. To reset a route on every return, use the page's or layout's [visit policy](activity.md), not a template.
+
 ## See also
 
 - [layoutPipe](layout-pipe.md) — layouts, `LayoutProps`, parallel-route slots

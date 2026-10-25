@@ -5,3 +5,5 @@ export type { RouteDefinition, RouteBuilder, ParamsOf, BodyOf, ResponseOf } from
 // Client hooks / helpers ("use client")
 export { getActionError, getActionInput } from "./client-helpers.js";
 export { useApiCall } from "./client-hooks.js";
+export { useFormAction } from "./use-form-action.js";
+export type { LeavePolicy, FormActionOptions } from "./use-form-action.js";
