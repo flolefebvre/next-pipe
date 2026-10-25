@@ -7,7 +7,7 @@ import { expect, test } from "vitest";
 // The pipes import the visit boundaries, so the reverse matters as much: a
 // directive anywhere else would turn a server entry point into client code.
 
-const clientModules = ["src/client-hooks.ts", "src/visit-boundary.tsx"];
+const clientModules = ["src/client-hooks.ts", "src/use-form-action.ts", "src/visit-boundary.tsx"];
 
 const isClientModule = (file: string) => /^["']use client["'];/.test(readFileSync(file, "utf8"));
 
