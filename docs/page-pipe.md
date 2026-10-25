@@ -106,8 +106,21 @@ export default pagePipe<PageProps<"/notes">>()
 
 A query failing the schema renders the 404 page — keep fields lenient with `.catch(...)` fallbacks unless the page truly cannot render without them.
 
+## Visit policy
+
+With Cache Components, Next keeps a page alive in a hidden `<Activity>` when the user leaves it. `pagePipe` wraps the page in a client boundary that decides what a return looks like, set with the `visits` option:
+
+```tsx
+export default pagePipe<PageProps<"/notes">>({ visits: "restore" }).handle(/* … */);
+```
+
+`"fresh"` (the default) makes every return a first visit; `"restore"` restores on Back and Forward only; `"keep"` always restores. See [Activity](activity.md) for when to pick which, and for what the boundary cannot reset.
+
+The boundary wraps what the pipe returns, so calling a page handler directly (in a test) returns that boundary element around your tree. Use `visits: "keep"` where a test needs the bare output.
+
 ## See also
 
+- [Activity](activity.md) — visit policies, forms, testing under `<Activity>`
 - [layoutPipe](layout-pipe.md) / [templatePipe](template-pipe.md) — the same onion in front of layouts and templates
 - [Core concepts](core-concepts.md) — `entry`, execution order, `OutputTypeMiddleware`
 - [Write your own middleware](custom-middlewares.md) — gates, loaders, and parametrized middlewares
